@@ -224,3 +224,11 @@ func WithFileno(num int) OptionProvider {
 		o.Limit[Fileno] = int64(num)
 	}
 }
+
+func WithLog(file string, level int, color bool) OptionProvider {
+	return func(o *Option) {
+		o.Logfile = file
+		o.LogLevel = level
+		o.LogColor = color
+	}
+}
