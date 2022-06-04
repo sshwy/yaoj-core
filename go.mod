@@ -1,3 +1,3 @@
-module github.com/sshwy/yaoj-worker
+module github.com/sshwy/yaoj-core
 
 go 1.18
