@@ -1,19 +1,14 @@
 package judger
 
-//go:generate go version
-//go:generate make -C yaoj-judger
-
-//#cgo CFLAGS: -I./yaoj-judger/include
-//#cgo LDFLAGS: -L./yaoj-judger -lyjudger
-//#include "./yaoj-judger/include/judger.h"
-//#include <stdlib.h>
-import "C"
 import (
 	"fmt"
+	"log"
 	"os"
 	"sync"
 	"time"
 )
+
+var logger = log.New(os.Stderr, "[judger] ", log.LstdFlags|log.Lshortfile|log.Lmsgprefix)
 
 type Option struct {
 	Logfile   string
@@ -28,20 +23,6 @@ type Option struct {
 }
 
 type OptionProvider func(*Option)
-
-type LimitType int
-
-const (
-	RealTime LimitType = C.REAL_TIME
-	CpuTime  LimitType = C.CPU_TIME
-	// virtual memory
-	VirtMem  LimitType = C.VIRTUAL_MEMORY
-	RealMem  LimitType = C.ACTUAL_MEMORY
-	StackMem LimitType = C.STACK_MEMORY
-	// output size
-	Output LimitType = C.OUTPUT_SIZE
-	Fileno LimitType = C.FILENO
-)
 
 type ByteValue int64
 
@@ -71,33 +52,9 @@ type Result struct {
 }
 
 func (r Result) String() string {
-	coloredres := map[StatusCode]string{
-		OK:  "\033[32mOK\033[0m",
-		RE:  "\033[31mRE\033[0m",
-		MLE: "\033[31mMLE\033[0m",
-		TLE: "\033[31mTLE\033[0m",
-		OLE: "\033[31mOLE\033[0m",
-		SE:  "\033[31mSE\033[0m",
-		DSC: "\033[31mDSC\033[0m",
-		ECE: "\033[31mECE\033[0m",
-	}
-	return fmt.Sprintf("%s{Code: %d, Signal: %d, ExitCode: %d, RealTime: %v, CpuTime: %v, Memory: %v}",
-		coloredres[r.Code],
-		r.Code, r.Signal, r.ExitCode, r.RealTime, r.CpuTime, r.Memory)
+	return fmt.Sprintf("%d{Code: %d, Signal: %d, ExitCode: %d, RealTime: %v, CpuTime: %v, Memory: %v}",
+		r.Code, r.Code, r.Signal, r.ExitCode, r.RealTime, r.CpuTime, r.Memory)
 }
-
-type StatusCode int
-
-const (
-	OK  StatusCode = C.OK
-	RE  StatusCode = C.RE
-	MLE StatusCode = C.MLE
-	TLE StatusCode = C.TLE
-	OLE StatusCode = C.OLE
-	SE  StatusCode = C.SE
-	DSC StatusCode = C.DSC
-	ECE StatusCode = C.ECE
-)
 
 // 用于同步操作
 var judgeSync sync.Mutex
@@ -185,43 +142,43 @@ func WithPolicyDir(dir string) OptionProvider {
 
 func WithRealTime(duration time.Duration) OptionProvider {
 	return func(o *Option) {
-		o.Limit[RealTime] = duration.Milliseconds()
+		o.Limit[realTime] = duration.Milliseconds()
 	}
 }
 
 func WithCpuTime(duration time.Duration) OptionProvider {
 	return func(o *Option) {
-		o.Limit[CpuTime] = duration.Milliseconds()
+		o.Limit[cpuTime] = duration.Milliseconds()
 	}
 }
 
 func WithVirMemory(space ByteValue) OptionProvider {
 	return func(o *Option) {
-		o.Limit[VirtMem] = int64(space)
+		o.Limit[virtMem] = int64(space)
 	}
 }
 
 func WithRealMemory(space ByteValue) OptionProvider {
 	return func(o *Option) {
-		o.Limit[RealMem] = int64(space)
+		o.Limit[realMem] = int64(space)
 	}
 }
 
 func WithStack(space ByteValue) OptionProvider {
 	return func(o *Option) {
-		o.Limit[StackMem] = int64(space)
+		o.Limit[stackMem] = int64(space)
 	}
 }
 
 func WithOutput(space ByteValue) OptionProvider {
 	return func(o *Option) {
-		o.Limit[Output] = int64(space)
+		o.Limit[outputSize] = int64(space)
 	}
 }
 
 func WithFileno(num int) OptionProvider {
 	return func(o *Option) {
-		o.Limit[Fileno] = int64(num)
+		o.Limit[filenoLim] = int64(num)
 	}
 }
 

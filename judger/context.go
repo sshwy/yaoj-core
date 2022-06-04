@@ -17,6 +17,35 @@ import (
 //#include <stdlib.h>
 import "C"
 
+// StatusCode describes final status of a execution. Note that Ok is
+// the only status for success
+type StatusCode int
+
+const (
+	Ok               StatusCode = C.OK
+	RuntimeError     StatusCode = C.RE
+	MemoryExceed     StatusCode = C.MLE
+	TimeExceed       StatusCode = C.TLE
+	OoutputExceed    StatusCode = C.OLE
+	SystemError      StatusCode = C.SE
+	DangerousSyscall StatusCode = C.DSC
+	ExitError        StatusCode = C.ECE
+)
+
+type LimitType int
+
+const (
+	realTime LimitType = C.REAL_TIME
+	cpuTime  LimitType = C.CPU_TIME
+	// virtual memory
+	virtMem  LimitType = C.VIRTUAL_MEMORY
+	realMem  LimitType = C.ACTUAL_MEMORY
+	stackMem LimitType = C.STACK_MEMORY
+	// output size
+	outputSize LimitType = C.OUTPUT_SIZE
+	filenoLim  LimitType = C.FILENO
+)
+
 func boolToInt(v bool) int {
 	if v {
 		return 1
@@ -31,6 +60,7 @@ func boolToInt(v bool) int {
 // log_level determine minimum log level (DEBUG, INFO, WARN, ERROR = 0, 1, 2, 3)
 // with_color whether use ASCII color controller character
 func LogSet(filename string, level int, color bool) error {
+	logger.Printf("LogSet: file=%s level=%d color=%v", filename, level, color)
 	var cfilename *C.char = C.CString(filename)
 	defer C.free(unsafe.Pointer(cfilename))
 
@@ -144,19 +174,19 @@ type L map[LimitType]int64
 func (r context) SetLimit(options L) error {
 	for key, val := range options {
 		switch key {
-		case RealTime:
+		case realTime:
 			C.yjudger_set_limit(r.ctxt, C.REAL_TIME, C.int(val))
-		case CpuTime:
+		case cpuTime:
 			C.yjudger_set_limit(r.ctxt, C.CPU_TIME, C.int(val))
-		case VirtMem:
+		case virtMem:
 			C.yjudger_set_limit(r.ctxt, C.VIRTUAL_MEMORY, C.int(val))
-		case RealMem:
+		case realMem:
 			C.yjudger_set_limit(r.ctxt, C.ACTUAL_MEMORY, C.int(val))
-		case StackMem:
+		case stackMem:
 			C.yjudger_set_limit(r.ctxt, C.STACK_MEMORY, C.int(val))
-		case Output:
+		case outputSize:
 			C.yjudger_set_limit(r.ctxt, C.OUTPUT_SIZE, C.int(val))
-		case Fileno:
+		case filenoLim:
 			C.yjudger_set_limit(r.ctxt, C.FILENO, C.int(val))
 		default:
 			return fmt.Errorf("unknown limit type: %d", key)
