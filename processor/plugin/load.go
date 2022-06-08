@@ -62,7 +62,7 @@ func (r *pluginProcessor) Run(input []string, output []string) (result *judger.R
 	if code != 0 {
 		return &judger.Result{
 			Code:     judger.ExitError,
-			ExitCode: code,
+			ExitCode: &code,
 		}, nil
 	} else {
 		return nil, nil

@@ -85,13 +85,19 @@ func newContext() context {
 
 func (r context) Result() Result {
 	result := C.yjudger_result(r.ctxt)
+	signal := int(result.signal)
+	exitCode := int(result.exit_code)
+	realTime := time.Duration(int(result.real_time) * int(time.Millisecond))
+	cpuTime := time.Duration(int(result.cpu_time) * int(time.Millisecond))
+	memory := ByteValue(result.real_memory)
+
 	return Result{
 		Code:     StatusCode(result.code),
-		Signal:   int(result.signal),
-		ExitCode: int(result.exit_code),
-		RealTime: time.Duration(int(result.real_time) * int(time.Millisecond)),
-		CpuTime:  time.Duration(int(result.cpu_time) * int(time.Millisecond)),
-		Memory:   ByteValue(result.real_memory),
+		Signal:   &signal,
+		ExitCode: &exitCode,
+		RealTime: &realTime,
+		CpuTime:  &cpuTime,
+		Memory:   &memory,
 	}
 }
 

@@ -43,12 +43,13 @@ func (r ByteValue) String() string {
 	}
 }
 
+// Code is required, others are optional
 type Result struct {
 	// 结果状态：OK/RE/MLE/...
 	Code              StatusCode
-	RealTime, CpuTime time.Duration
-	Memory            ByteValue
-	Signal, ExitCode  int
+	RealTime, CpuTime *time.Duration
+	Memory            *ByteValue
+	Signal, ExitCode  *int
 }
 
 func (r Result) String() string {
