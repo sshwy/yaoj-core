@@ -1,13 +1,14 @@
+/*
+Processor takes a series of input (files) and generates a series of outputs.
+*/
 package processor
 
 import (
 	"github.com/sshwy/yaoj-core/judger"
-	"github.com/sshwy/yaoj-core/utils"
 )
 
-type HashValue = utils.HashValue
-
 type Processor interface {
+	// Report human-readable label for each input and output
 	Label() (inputlabel []string, outputlabel []string)
 	// Given a fixed number of input files, generate output to  corresponding files
 	// with execution result. It's ok if result == nil, which means success.
