@@ -1,12 +1,10 @@
-/*
-Processor takes a series of input (files) and generates a series of outputs.
-*/
 package processor
 
 import (
 	"github.com/sshwy/yaoj-core/judger"
 )
 
+// Processor takes a series of input (files) and generates a series of outputs.
 type Processor interface {
 	// Report human-readable label for each input and output
 	Label() (inputlabel []string, outputlabel []string)
