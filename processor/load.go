@@ -1,20 +1,26 @@
-package plugin
+package processor
 
 import (
 	"fmt"
 	goPlugin "plugin"
 
 	"github.com/sshwy/yaoj-core/judger"
-	"github.com/sshwy/yaoj-core/processor"
 )
 
+// Plugin describes how to build a custom processor by creating a shared
+// library with specific symbol exposed.
+//
+// Conventionally, plugin is written in go which is compiled to a shared library
+// (plugin) and is loaded in runtime. However we also plan to support C/C++ plugin
+// due to its popularity.
+//
 // Load a go plugin as processor.
 // The plugin requires two exported functions:
 //
 //     func Label() (input []string, output []string)
 //     func Main(inputs []string, outputs []string) int
 //
-func Load(plugin string) (processor.Processor, error) {
+func LoadPlugin(plugin string) (Processor, error) {
 	p, err := goPlugin.Open(plugin)
 	if err != nil {
 		return nil, err
@@ -55,7 +61,7 @@ type pluginProcessor struct {
 	runner                  func([]string, []string) int
 }
 
-var _ processor.Processor = (*pluginProcessor)(nil)
+var _ Processor = (*pluginProcessor)(nil)
 
 func (r *pluginProcessor) Run(input []string, output []string) (result *judger.Result, err error) {
 	code := r.runner(input, output)
