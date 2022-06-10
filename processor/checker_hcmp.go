@@ -33,7 +33,9 @@ func (r CheckerHcmp) Run(input []string, output []string) (*judger.Result, error
 	fmt.Fscanf(fileb, "%s", &b)
 
 	if a == b {
-		return nil, nil
+		return &judger.Result{
+			Code: judger.Ok,
+		}, nil
 	} else {
 		filec, err := os.OpenFile(output[0], os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0744)
 		if err != nil {
