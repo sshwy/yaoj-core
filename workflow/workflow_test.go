@@ -3,6 +3,7 @@ package workflow_test
 import (
 	"testing"
 
+	"github.com/k0kubun/pp/v3"
 	"github.com/sshwy/yaoj-core/judger"
 	"github.com/sshwy/yaoj-core/workflow"
 )
@@ -10,14 +11,22 @@ import (
 type testanalyzer struct {
 }
 
-func (r testanalyzer) Analyze(results []*judger.Result, outbound []string) workflow.Result {
-	if results[2].Code == judger.Ok {
+func (r testanalyzer) Analyze(nodes []workflow.RuntimeNode, score float64) workflow.Result {
+	display := []workflow.ResultFileDisplay{
+		workflow.FileDisplay(nodes[1].Output[0], "output", 50),
+		workflow.FileDisplay(nodes[1].Output[1], "error", 50),
+	}
+	if nodes[2].Result.Code == judger.Ok {
 		return workflow.Result{
-			Score: 100,
+			Fullscore: score,
+			Score:     score,
+			File:      display,
 		}
 	}
 	return workflow.Result{
-		Score: 0,
+		Fullscore: score,
+		Score:     0,
+		File:      display,
 	}
 }
 
@@ -124,7 +133,6 @@ func TestWorkflow(t *testing.T) {
 				},
 			},
 		},
-		Outbound: []workflow.DataBound{},
 	}
 	dir := t.TempDir()
 	res, err := workflow.Run(w, dir, [][]string{
@@ -132,10 +140,14 @@ func TestWorkflow(t *testing.T) {
 		{"testdata/main.lim"},
 		{"testdata/script.sh"},
 		{"testdata/main.cpp"},
-	}, testanalyzer{})
+	}, testanalyzer{}, 100)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	t.Log("score: ", res.Score)
+	if res.Score != res.Fullscore {
+		t.Errorf("score=%f, expect %f", res.Score, res.Fullscore)
+		return
+	}
+	t.Log(pp.Sprint(*res))
 }

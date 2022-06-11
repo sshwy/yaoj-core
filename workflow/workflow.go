@@ -1,9 +1,10 @@
 package workflow
 
 import (
+	"os"
+	"strings"
 	"time"
 
-	"github.com/sshwy/yaoj-core/judger"
 	"github.com/sshwy/yaoj-core/processor"
 	"github.com/sshwy/yaoj-core/utils"
 )
@@ -41,8 +42,6 @@ type Workflow struct {
 	Node []Node
 	// inbound consists a series of data group
 	Inbound []DataBoundGroup
-	// outbound consists of all output files as a single data group
-	Outbound DataBoundGroup
 }
 
 // for storage
@@ -73,20 +72,43 @@ type DataBound struct {
 type DataBoundGroup []DataBound
 
 type Result struct {
-	Score  float64
-	Time   time.Duration
-	Memory utils.ByteValue
-	Title  string
-	File   []struct {
-		Title   string
-		Content string
-	}
+	Score     float64
+	Fullscore float64
+	Time      time.Duration
+	Memory    utils.ByteValue
+	// e. g. "Accepted", "Wrong Answer"
+	Title string
+	// a list of file content to display
+	File []ResultFileDisplay
+	// other tags
 	Property map[string]string
+}
+
+type ResultFileDisplay struct {
+	Title   string
+	Content string
 }
 
 // Analyzer generates result of a workflow.
 type Analyzer interface {
-	// results denotes every processor's result in the order of nodes.
-	// outbound consist of all file paths of Outbound
-	Analyze(results []*judger.Result, outbound []string) Result
+	Analyze(nodes []RuntimeNode, fullscore float64) Result
+}
+
+func fetchFileContent(path string, len int) []byte {
+	file, err := os.Open(path)
+	if err != nil {
+		return []byte("[error] " + err.Error())
+	}
+	defer file.Close()
+	b := make([]byte, len)
+	file.Read(b)
+	return b
+}
+
+func FileDisplay(path string, title string, len int) ResultFileDisplay {
+	content := strings.TrimRight(string(fetchFileContent(path, len)), "\x00 \n\t\r")
+	return ResultFileDisplay{
+		Title:   title,
+		Content: content,
+	}
 }
