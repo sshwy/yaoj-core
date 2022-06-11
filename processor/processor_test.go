@@ -40,10 +40,24 @@ func TestCheckerHcmp(t *testing.T) {
 
 // run `go build -buildmode=plugin` under `example/diff-go` before running this test!
 func TestLoad(t *testing.T) {
-	proc, err := processor.LoadPlugin("example/diff-go/diff-go.so")
+	proc, err := processor.LoadPlugin("testdata/diff-go/diff-go.so")
 	if err != nil {
 		t.Error(err)
 	}
 
 	t.Log(proc.Label())
+}
+
+func TestCompiler(t *testing.T) {
+	dir := t.TempDir()
+	compiler := processor.Compiler{}
+	res, err := compiler.Run(
+		[]string{"testdata/compiler/main.cpp", "testdata/compiler/script.sh"},
+		[]string{path.Join(dir, "dest"), path.Join(dir, "cp.log"), path.Join(dir, "judger.log")},
+	)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	t.Log(res)
 }
