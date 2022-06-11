@@ -3,6 +3,7 @@ package utils
 import (
 	"crypto/sha256"
 	"fmt"
+	"math/rand"
 )
 
 type HashValue []byte
@@ -29,4 +30,22 @@ func (r ByteValue) String() string {
 	} else {
 		return fmt.Sprintf("%.1f%s", num/1e9, "GB")
 	}
+}
+
+func Map[T any, M any](s []T, f func(T) M) []M {
+	var a []M = make([]M, len(s))
+	for i, v := range s {
+		a[i] = f(v)
+	}
+	return a
+}
+
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+func RandomString(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
 }
