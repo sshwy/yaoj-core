@@ -54,7 +54,7 @@ type Result struct {
 
 func (r Result) String() string {
 	return fmt.Sprintf("%d{Code: %d, Signal: %d, ExitCode: %d, RealTime: %v, CpuTime: %v, Memory: %v}",
-		r.Code, r.Code, r.Signal, r.ExitCode, r.RealTime, r.CpuTime, r.Memory)
+		r.Code, r.Code, *r.Signal, *r.ExitCode, r.RealTime, r.CpuTime, r.Memory)
 }
 
 // 用于同步操作
