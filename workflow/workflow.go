@@ -139,11 +139,6 @@ type ResultFileDisplay struct {
 	Content string
 }
 
-// Analyzer generates result of a workflow.
-type Analyzer interface {
-	Analyze(nodes []RuntimeNode, fullscore float64) Result
-}
-
 func fetchFileContent(path string, len int) []byte {
 	file, err := os.Open(path)
 	if err != nil {

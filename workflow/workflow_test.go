@@ -151,3 +151,13 @@ func TestWorkflow(t *testing.T) {
 	}
 	t.Log(pp.Sprint(*res))
 }
+
+//go:generate go build -buildmode=plugin -o ./testdata ./testdata/custom_analyzer.go
+func TestLoadAnalyzer(t *testing.T) {
+	a, err := workflow.LoadAnalyzer("testdata/custom_analyzer.so")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	pp.Print(a)
+}
