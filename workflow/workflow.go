@@ -1,6 +1,7 @@
 package workflow
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -44,12 +45,61 @@ type Workflow struct {
 	Inbound []DataBoundGroup
 }
 
-// for storage
-// func (r *Workflow) Serialize() []byte
-
 // check whether it's a well-formatted DAG, its inbound coverage and sth else
 func (r *Workflow) Valid() error {
-	logger.Printf("Workflow.Valid not implemented!!!")
+	var inboundCnt int
+	for i, node := range r.Node {
+		proc := node.Processor()
+		if proc == nil {
+			return fmt.Errorf("node[%d] has invalid processor name (%s)", i, node.ProcName)
+		}
+		inLabel, outLabel := proc.Label()
+		if len(node.InEdge) != len(inLabel) || len(node.OutEdge) != len(outLabel) {
+			return fmt.Errorf("node[%d] has invalid number of in edge or out edge", i)
+		}
+		for j, edge := range node.InEdge {
+			if inLabel[j] != edge.Label {
+				return fmt.Errorf("node[%d]'s InEdge[%d] has invalid label %s, expect %s", i, j, edge.Label, inLabel[j])
+			}
+			if edge.Bound == nil {
+				inboundCnt++
+				continue
+			}
+			if edge.Bound.Index >= i || edge.Bound.Index < 0 {
+				return fmt.Errorf("node[%d] has invalid InEdge %+v", i, edge)
+			}
+		}
+		for j, edge := range node.OutEdge {
+			if outLabel[j] != edge.Label {
+				return fmt.Errorf("node[%d]'s OutEdge[%d] has invalid label %s, expect %s", i, j, edge.Label, outLabel[j])
+			}
+			if edge.Bound == nil {
+				continue
+			}
+			if edge.Bound.Index <= i || edge.Bound.Index >= len(r.Node) {
+				return fmt.Errorf("node[%d] has invalid OutEdge %+v", i, edge)
+			}
+		}
+	}
+	for i, group := range r.Inbound {
+		inboundCnt -= len(group)
+		for j, bound := range group {
+			if bound.Bound.Index >= len(r.Node) {
+				return fmt.Errorf("inbound[%d][%d] has invalid node index %d", i, j, bound.Bound.Index)
+			}
+			node := r.Node[bound.Bound.Index]
+			if bound.Bound.LabelIndex >= len(node.InEdge) {
+				return fmt.Errorf("inbound[%d][%d] has invalid node label index %d", i, j, bound.Bound.LabelIndex)
+			}
+			if node.InEdge[bound.Bound.LabelIndex].Bound != nil {
+				return fmt.Errorf("node[%d].InEdge[%d] conflict with Inbound[%d][%d]",
+					bound.Bound.Index, bound.Bound.LabelIndex, i, j)
+			}
+		}
+	}
+	if inboundCnt != 0 {
+		return fmt.Errorf("invalid inbound num (diff=%d)", inboundCnt)
+	}
 	return nil
 }
 
