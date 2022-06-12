@@ -9,9 +9,9 @@ import (
 	"github.com/sshwy/yaoj-core/processor"
 )
 
-// run `go build -buildmode=plugin` under `example/diff-go` before running this test!
+//go:generate go build -buildmode=plugin -o ./testdata/diff-go ./testdata/diff-go/main.go
 func TestLoad(t *testing.T) {
-	proc, err := processor.LoadPlugin("testdata/diff-go/diff-go.so")
+	proc, err := processor.LoadPlugin("testdata/diff-go/main.so")
 	if err != nil {
 		t.Error(err)
 	}
