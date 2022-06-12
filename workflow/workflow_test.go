@@ -88,58 +88,48 @@ func TestWorkflow(t *testing.T) {
 				OutEdge: []workflow.Edge{{Label: "result"}},
 			},
 		},
-		Inbound: []workflow.DataBoundGroup{
-			[]workflow.DataBound{
-				{
-					Data: "input",
-					Bound: workflow.Bound{
-						Index:      1, // runner:stdio
-						LabelIndex: 1, // stdin
-					},
+		Inbound: map[string]*map[string]workflow.Bound{
+			"testcase": {
+				"input": {
+					Index:      1, // runner:stdio
+					LabelIndex: 1, // stdin
 				},
-				{
-					Data: "answer",
-					Bound: workflow.Bound{
-						Index:      2, // checker
-						LabelIndex: 1, // ans
-					},
+				"answer": {
+					Index:      2, // checker
+					LabelIndex: 1, // ans
 				},
 			},
-			[]workflow.DataBound{
-				{
-					Data: "limitation",
-					Bound: workflow.Bound{
-						Index:      1, // runner:stdio
-						LabelIndex: 2, // limit
-					},
+			"option": {
+				"limitation": {
+					Index:      1, // runner:stdio
+					LabelIndex: 2, // limit
+				},
+				"compilescript": {
+					Index:      0, // compiler
+					LabelIndex: 1, // script
 				},
 			},
-			[]workflow.DataBound{
-				{
-					Data: "compilescript",
-					Bound: workflow.Bound{
-						Index:      0, // compiler
-						LabelIndex: 1, // script
-					},
-				},
-			},
-			[]workflow.DataBound{
-				{
-					Data: "source",
-					Bound: workflow.Bound{
-						Index:      0, // compiler
-						LabelIndex: 0, // source
-					},
+			"submission": {
+				"source": {
+					Index:      0, // compiler
+					LabelIndex: 0, // source
 				},
 			},
 		},
 	}
 	dir := t.TempDir()
-	res, err := workflow.Run(w, dir, [][]string{
-		{"testdata/main.in", "testdata/main.ans"},
-		{"testdata/main.lim"},
-		{"testdata/script.sh"},
-		{"testdata/main.cpp"},
+	res, err := workflow.Run(w, dir, map[string]*map[string]string{
+		"testcase": {
+			"input":  "testdata/main.in",
+			"answer": "testdata/main.ans",
+		},
+		"option": {
+			"limitation":    "testdata/main.lim",
+			"compilescript": "testdata/script.sh",
+		},
+		"submission": {
+			"source": "testdata/main.cpp",
+		},
 	}, testanalyzer{}, 100)
 	if err != nil {
 		t.Error(err)

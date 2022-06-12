@@ -31,8 +31,9 @@ func (r *RuntimeNode) inputFullfilled() bool {
 	return true
 }
 
-// perform a workflow in a directory
-func Run(w Workflow, dir string, inboundPath [][]string, a Analyzer, fullscore float64) (*Result, error) {
+// perform a workflow in a directory.
+// inboundPath: map[datagroup_name]*map[field]filename
+func Run(w Workflow, dir string, inboundPath map[string]*map[string]string, a Analyzer, fullscore float64) (*Result, error) {
 	if err := w.Valid(); err != nil {
 		return nil, fmt.Errorf("workflow validation: %s", err.Error())
 	}
@@ -47,11 +48,11 @@ func Run(w Workflow, dir string, inboundPath [][]string, a Analyzer, fullscore f
 		return nil, fmt.Errorf("invalid inboundPath")
 	}
 	for i, group := range w.Inbound {
-		if len(w.Inbound[i]) != len(inboundPath[i]) {
+		if len(*w.Inbound[i]) != len(*inboundPath[i]) {
 			return nil, fmt.Errorf("invalid inboundPath")
 		}
-		for j, bound := range group {
-			nodes[bound.Bound.Index].Input[bound.Bound.LabelIndex] = inboundPath[i][j]
+		for j, bound := range *group {
+			nodes[bound.Index].Input[bound.LabelIndex] = (*inboundPath[i])[j]
 		}
 	}
 
@@ -65,7 +66,7 @@ func Run(w Workflow, dir string, inboundPath [][]string, a Analyzer, fullscore f
 				nodes[edge.Bound.Index].Input[edge.Bound.LabelIndex] = node.Output[i]
 			}
 		}
-		logger.Printf("run node[%d]: input %v output %v", id, node.Input, node.Output)
+		logger.Printf("run node[%d]: input %+v output %+v", id, node.Input, node.Output)
 		result, err := node.Processor().Run(node.Input, node.Output)
 		if err != nil {
 			return nil, err

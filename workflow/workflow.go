@@ -41,8 +41,9 @@ func (r *Node) Processor() processor.Processor {
 type Workflow struct {
 	// a node itself is just a processor
 	Node []Node
-	// inbound consists a series of data group
-	Inbound []DataBoundGroup
+	// inbound consists a series of data group.
+	// Inbound: map[datagroup_name]*map[field]Bound
+	Inbound map[string]*map[string]Bound
 }
 
 // check whether it's a well-formatted DAG, its inbound coverage and sth else
@@ -82,18 +83,18 @@ func (r *Workflow) Valid() error {
 		}
 	}
 	for i, group := range r.Inbound {
-		inboundCnt -= len(group)
-		for j, bound := range group {
-			if bound.Bound.Index >= len(r.Node) {
-				return fmt.Errorf("inbound[%d][%d] has invalid node index %d", i, j, bound.Bound.Index)
+		inboundCnt -= len(*group)
+		for j, bound := range *group {
+			if bound.Index >= len(r.Node) {
+				return fmt.Errorf("inbound[%s][%s] has invalid node index %d", i, j, bound.Index)
 			}
-			node := r.Node[bound.Bound.Index]
-			if bound.Bound.LabelIndex >= len(node.InEdge) {
-				return fmt.Errorf("inbound[%d][%d] has invalid node label index %d", i, j, bound.Bound.LabelIndex)
+			node := r.Node[bound.Index]
+			if bound.LabelIndex >= len(node.InEdge) {
+				return fmt.Errorf("inbound[%s][%s] has invalid node label index %d", i, j, bound.LabelIndex)
 			}
-			if node.InEdge[bound.Bound.LabelIndex].Bound != nil {
-				return fmt.Errorf("node[%d].InEdge[%d] conflict with Inbound[%d][%d]",
-					bound.Bound.Index, bound.Bound.LabelIndex, i, j)
+			if node.InEdge[bound.LabelIndex].Bound != nil {
+				return fmt.Errorf("node[%d].InEdge[%d] conflict with Inbound[%s][%s]",
+					bound.Index, bound.LabelIndex, i, j)
 			}
 		}
 	}
@@ -108,18 +109,6 @@ func (r *Workflow) Valid() error {
 
 // parse dot file to workflow
 // func (r *Workflow) ParseDot(content string) error
-
-// use a string represents a data field
-type DataLabel string
-
-// connect data with bound
-type DataBound struct {
-	Data  DataLabel
-	Bound Bound
-}
-
-// a series of data
-type DataBoundGroup []DataBound
 
 type Result struct {
 	Score     float64
