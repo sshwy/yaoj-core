@@ -44,6 +44,7 @@ type Workflow struct {
 	// inbound consists a series of data group.
 	// Inbound: map[datagroup_name]*map[field]Bound
 	Inbound map[string]*map[string]Bound
+	Analyzer
 }
 
 // check whether it's a well-formatted DAG, its inbound coverage and sth else

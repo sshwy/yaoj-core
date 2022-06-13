@@ -33,7 +33,7 @@ func (r *RuntimeNode) inputFullfilled() bool {
 
 // perform a workflow in a directory.
 // inboundPath: map[datagroup_name]*map[field]filename
-func Run(w Workflow, dir string, inboundPath map[string]*map[string]string, a Analyzer, fullscore float64) (*Result, error) {
+func Run(w Workflow, dir string, inboundPath map[string]*map[string]string, fullscore float64) (*Result, error) {
 	if err := w.Valid(); err != nil {
 		return nil, fmt.Errorf("workflow validation: %s", err.Error())
 	}
@@ -74,6 +74,6 @@ func Run(w Workflow, dir string, inboundPath map[string]*map[string]string, a An
 		nodes[id].Result = result
 	}
 
-	res := a.Analyze(nodes, fullscore)
+	res := w.Analyze(nodes, fullscore)
 	return &res, nil
 }

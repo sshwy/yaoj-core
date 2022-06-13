@@ -3,6 +3,7 @@ package workflow_test
 import (
 	"testing"
 
+	"github.com/awalterschulze/gographviz"
 	"github.com/k0kubun/pp/v3"
 	"github.com/sshwy/yaoj-core/judger"
 	"github.com/sshwy/yaoj-core/workflow"
@@ -116,6 +117,7 @@ func TestWorkflow(t *testing.T) {
 				},
 			},
 		},
+		Analyzer: testanalyzer{},
 	}
 	dir := t.TempDir()
 	res, err := workflow.Run(w, dir, map[string]*map[string]string{
@@ -130,7 +132,7 @@ func TestWorkflow(t *testing.T) {
 		"submission": {
 			"source": "testdata/main.cpp",
 		},
-	}, testanalyzer{}, 100)
+	}, 100)
 	if err != nil {
 		t.Error(err)
 		return
@@ -150,4 +152,59 @@ func TestLoadAnalyzer(t *testing.T) {
 		return
 	}
 	pp.Print(a)
+}
+
+var dotxt string = `
+digraph{
+  graph[ranksep=1,rankdir=LR,label="Workflow",nodesep=1];
+  node[shape=record,style=filled,fillcolor=white];
+  edge[arrowhead=odot, color="#9d9d9d"];
+
+  idg for inbound data group
+  subgraph cluster_idg_group1{
+    graph[label="Data Group 1"];
+    node[shape=record,style=filled,fillcolor=grey];
+    main;
+  } 
+
+  subgraph cluster_idg_group2{
+    graph[label="Data Group 2"];
+    node[shape=record,style=filled,fillcolor=grey];
+    inputopt;
+		ans;
+  } 
+  subgraph processor{
+    node[shape=hexagon];
+    compile;
+		judge;
+		check;
+		makeinput;
+  }
+
+  main -> compile[headlabel="source"];
+  compile -> compile_log[taillabel="log"];
+  compile -> judge[taillabel="result", headlabel="exec"];
+  inputopt -> makeinput[headlabel="option"];
+  makeinput -> judge[taillabel="result", headlabel="input"];
+  judge -> judger_err[taillabel="mainlog"];
+  judge -> judge_log[taillabel="log"];
+  judge -> check[taillabel="output", headlabel="out"];
+  ans -> check[headlabel="ans"];
+  check -> check_log[taillabel="log"];
+  check -> score[taillabel="score"];
+}
+`
+
+func TestDot(t *testing.T) {
+	graphAst, err := gographviz.ParseString(dotxt)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	graph := gographviz.NewGraph()
+	if err := gographviz.Analyse(graphAst, graph); err != nil {
+		panic(err)
+	}
+	// pp.Print(graphAst)
+	// pp.Print(graph)
 }
