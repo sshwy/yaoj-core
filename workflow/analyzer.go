@@ -3,6 +3,8 @@ package workflow
 import (
 	"fmt"
 	goPlugin "plugin"
+
+	"github.com/sshwy/yaoj-core/judger"
 )
 
 // Analyzer generates result of a workflow.
@@ -27,3 +29,28 @@ func LoadAnalyzer(plugin string) (Analyzer, error) {
 		return nil, fmt.Errorf("AnalyzerPlugin not implement Analyzer")
 	}
 }
+
+type DefaultAnalyzer struct {
+}
+
+func (r DefaultAnalyzer) Analyze(nodes []RuntimeNode, fullscore float64) Result {
+	for _, node := range nodes {
+		if node.Result == nil {
+			continue
+		}
+		if node.Result.Code != judger.Ok {
+			return Result{
+				Score:     0,
+				Fullscore: fullscore,
+				Title:     "Not Accepted",
+			}
+		}
+	}
+	return Result{
+		Score:     fullscore,
+		Fullscore: fullscore,
+		Title:     "Accepted",
+	}
+}
+
+var _ Analyzer = DefaultAnalyzer{}
