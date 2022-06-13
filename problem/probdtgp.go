@@ -44,6 +44,19 @@ func (r *ProbDtgp) Records() []*map[string]string {
 	return r.records
 }
 
+// Get the corresponding record via id, changing suffix to file's path. Return
+// nil for invalid id.
+func (r *ProbDtgp) RecordPath(id int) *map[string]string {
+	if id < 0 || id >= len(r.records) {
+		return nil
+	}
+	a := map[string]string{}
+	for field, suf := range *r.records[id] {
+		a[field] = r.rcpath(id, field, suf)
+	}
+	return &a
+}
+
 func (r *ProbDtgp) AddField(name string) error {
 	logger.Printf(`AddField "%s" for group %s`, name, r.dir)
 	if _, ok := r.fields[name]; ok {

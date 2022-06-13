@@ -119,6 +119,12 @@ int main () { int a, b; cin >> a >> b; cout << a + b << endl; return 0; }
 	}
 	submission.NewRecord()
 	submission.AlterValue(0, "source", path.Join(dir, "src.cpp"))
+
+	testcases := prob.Testcase()
+	for i, testcase := range testcases {
+		t.Log(i, " ", testcase.ID())
+		t.Log(pp.Sprint(testcase.Run(t.TempDir(), *submission.RecordPath(0), 100)))
+	}
 }
 
 func TestLoad(t *testing.T) {
