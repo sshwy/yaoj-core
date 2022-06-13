@@ -1,6 +1,7 @@
 package workflow
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -37,18 +38,24 @@ func (r *Node) Processor() processor.Processor {
 	return processor.Get(r.ProcName)
 }
 
-// workflow describes how to perform a single testcase's judgement
-type Workflow struct {
+type WorkflowGraph struct {
 	// a node itself is just a processor
 	Node []Node
 	// inbound consists a series of data group.
 	// Inbound: map[datagroup_name]*map[field]Bound
 	Inbound map[string]*map[string]Bound
-	Analyzer
+}
+
+func (r *WorkflowGraph) Serialize() []byte {
+	res, err := json.Marshal(*r)
+	if err != nil {
+		panic(err)
+	}
+	return res
 }
 
 // check whether it's a well-formatted DAG, its inbound coverage and sth else
-func (r *Workflow) Valid() error {
+func (r *WorkflowGraph) Valid() error {
 	var inboundCnt int
 	for i, node := range r.Node {
 		proc := node.Processor()
@@ -105,11 +112,28 @@ func (r *Workflow) Valid() error {
 	return nil
 }
 
-// transform to dot file content
-// func (r *Workflow) Dot() string
+func Load(serial []byte) (*WorkflowGraph, error) {
+	var graph WorkflowGraph
+	err := json.Unmarshal(serial, &graph)
+	if err != nil {
+		return nil, err
+	}
+	return &graph, nil
+}
 
-// parse dot file to workflow
-// func (r *Workflow) ParseDot(content string) error
+func LoadFile(path string) (*WorkflowGraph, error) {
+	serial, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	return Load(serial)
+}
+
+// workflow describes how to perform a single testcase's judgement
+type Workflow struct {
+	*WorkflowGraph
+	Analyzer
+}
 
 type Result struct {
 	Score     float64
