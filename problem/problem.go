@@ -2,6 +2,7 @@
 package problem
 
 import (
+	"fmt"
 	"io/fs"
 	"log"
 	"os"
@@ -81,6 +82,9 @@ func (r *Problem) SetStmt(content []byte) error {
 
 // create a new datagroup in dir/datagroup/[name]/
 func (r *Problem) NewDataGroup(name string) (*ProbDtgp, error) {
+	if _, ok := r.groups[name]; ok {
+		return nil, fmt.Errorf("datagroup has already existed")
+	}
 	err := os.Mkdir(path.Join(r.dir.DtgpDir(), name), os.ModePerm)
 	if err != nil {
 		return nil, err
@@ -89,12 +93,22 @@ func (r *Problem) NewDataGroup(name string) (*ProbDtgp, error) {
 	if err != nil {
 		return nil, err
 	}
+	r.groups[name] = dtgp
 	return dtgp, nil
 }
 
 // get a datagroup in dir/datagroup/[name]/, nil if not found
 func (r *Problem) DataGroup(name string) *ProbDtgp {
 	return r.groups[name]
+}
+
+func (r *Problem) SetWkflGraph(serial []byte) error {
+	graph, err := workflow.Load(serial)
+	r.workflow.WorkflowGraph = graph
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func Load(dir string) (*Problem, error) {
