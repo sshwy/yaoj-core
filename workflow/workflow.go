@@ -118,6 +118,9 @@ func Load(serial []byte) (*WorkflowGraph, error) {
 	if err != nil {
 		return nil, err
 	}
+	if err := graph.Valid(); err != nil {
+		return nil, err
+	}
 	return &graph, nil
 }
 
