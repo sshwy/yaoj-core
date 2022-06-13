@@ -34,7 +34,7 @@ type DefaultAnalyzer struct {
 }
 
 func (r DefaultAnalyzer) Analyze(nodes []RuntimeNode, fullscore float64) Result {
-	for _, node := range nodes {
+	for i, node := range nodes {
 		if node.Result == nil {
 			continue
 		}
@@ -43,6 +43,12 @@ func (r DefaultAnalyzer) Analyze(nodes []RuntimeNode, fullscore float64) Result 
 				Score:     0,
 				Fullscore: fullscore,
 				Title:     "Not Accepted",
+				File: []ResultFileDisplay{
+					{
+						Title:   "Error Node",
+						Content: fmt.Sprintf("id=%d, proc=%s, Code=%v %s", i, node.ProcName, node.Result.Code, nodes[0].Output[1]),
+					},
+				},
 			}
 		}
 	}
