@@ -29,7 +29,6 @@ func (r Compiler) Run(input []string, output []string) (*judger.Result, error) {
 		judger.WithLog(output[2], 0, false),
 		judger.WithRealTime(time.Minute),
 		judger.WithOutput(10*judger.MB),
-		judger.WithFileno(10),
 	)
 	if err != nil {
 		return nil, err

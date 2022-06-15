@@ -59,6 +59,10 @@ func TestProcessor(t *testing.T) {
 			t.Error(err)
 			return
 		}
+		if res.Code != judger.Ok {
+			t.Errorf("expect %v, found %v", judger.Ok, res.Code)
+			return
+		}
 		t.Log(res)
 	})
 
@@ -66,7 +70,7 @@ func TestProcessor(t *testing.T) {
 		fa := path.Join(dir, "a.runnerstdio.in")
 		fb := path.Join(dir, "lim.runnerstdio.in")
 		script.Echo("1 2").WriteFile(fa)
-		script.Echo("1000 1000 104857600 104857600 104857600 104857600 10").WriteFile(fb)
+		script.Echo("1000 1000 204857600 204857600 204857600 204857600 10").WriteFile(fb)
 		runner := processor.RunnerStdio{}
 		res, err := runner.Run(
 			[]string{path.Join(dir, "dest"), fa, fb},
