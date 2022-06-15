@@ -64,7 +64,7 @@ func (r *Testcase) ID() uint64 {
 func (r *Testcase) InboundPath(submission map[string]string) map[string]*map[string]string {
 	a := map[string]*map[string]string{}
 	for name, id := range r.groups {
-		a[name] = r.problem.groups[name].RecordPath(id)
+		a[name] = r.problem.groups[name].Record(id).PathMap()
 	}
 	a["submission"] = &submission
 	return a
@@ -161,7 +161,7 @@ func (r *Problem) Testcase() []Testcase {
 
 	for name, dtgp := range r.groups {
 		logger.Print(name)
-		pathmap := dtgp.RecordPath(0)
+		pathmap := dtgp.Record(0).PathMap()
 		if pathmap == nil {
 			panic("empty datagroup")
 		}
@@ -171,11 +171,7 @@ func (r *Problem) Testcase() []Testcase {
 
 		cnt := len(groups)
 
-		for i := 1; true; i++ {
-			pathmap := dtgp.RecordPath(i)
-			if pathmap == nil {
-				break
-			}
+		for i := 1; i < dtgp.Len(); i++ {
 			var more = make([]map[string]int, cnt)
 			for j := 0; j < cnt; j++ {
 				more[j] = dup(groups[j])

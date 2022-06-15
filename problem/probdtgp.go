@@ -20,7 +20,7 @@ type ProbDtgp struct {
 	dir    string
 	fields map[string]bool
 	// suffix
-	records []*map[string]string
+	records []*Record
 }
 
 func (r *ProbDtgp) rcpath(id int, field string, suf string) string {
@@ -39,22 +39,20 @@ func (r *ProbDtgp) Fields() []string {
 	return res
 }
 
+func (r *ProbDtgp) Len() int {
+	return len(r.records)
+}
+
 // a table of all records.
-func (r *ProbDtgp) Records() []*map[string]string {
+func (r *ProbDtgp) Records() []*Record {
 	return r.records
 }
 
-// Get the corresponding record via id, changing suffix to file's path. Return
-// nil for invalid id.
-func (r *ProbDtgp) RecordPath(id int) *map[string]string {
+func (r *ProbDtgp) Record(id int) *Record {
 	if id < 0 || id >= len(r.records) {
 		return nil
 	}
-	a := map[string]string{}
-	for field, suf := range *r.records[id] {
-		a[field] = r.rcpath(id, field, suf)
-	}
-	return &a
+	return r.records[id]
 }
 
 func (r *ProbDtgp) AddField(name string) error {
@@ -63,14 +61,10 @@ func (r *ProbDtgp) AddField(name string) error {
 		return fmt.Errorf("field \"%s\" has already existed", name)
 	}
 	r.fields[name] = true
-	suf := "txt"
-	for i, record := range r.records {
-		(*record)[name] = suf // default suffix
-		file, err := os.Create(r.rcpath(i, name, suf))
-		if err != nil {
+	for _, record := range r.records {
+		if err := record.AddField(name); err != nil {
 			return err
 		}
-		file.Close()
 	}
 	return nil
 }
@@ -81,29 +75,29 @@ func (r *ProbDtgp) RemoveField(name string) error {
 		return fmt.Errorf("field \"%s\" not exist", name)
 	}
 	delete(r.fields, name)
-	for i, record := range r.records {
-		os.Remove(r.rcpath(i, name, (*record)[name]))
-		delete(*record, name)
+	for _, record := range r.records {
+		if err := record.RemoveField(name); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
-// append an empty record
-func (r *ProbDtgp) NewRecord() error {
+// append an empty record, this will create am empty txt file for each field
+func (r *ProbDtgp) NewRecord() (*Record, error) {
 	logger.Printf(`NewRecord for group %s`, r.dir)
-	r.records = append(r.records, &map[string]string{})
-	id := len(r.records) - 1
-	record := *r.records[id]
+	record := Record{Map: map[string]string{}, id: len(r.records), dtgp: r}
+	r.records = append(r.records, &record)
 	for k := range r.fields {
 		suf := "txt"
-		record[k] = suf // default suffix
-		file, err := os.Create(r.rcpath(id, k, suf))
+		record.Map[k] = suf // default suffix
+		file, err := os.Create(r.rcpath(record.id, k, suf))
 		if err != nil {
-			return err
+			return nil, err
 		}
 		file.Close()
 	}
-	return nil
+	return &record, nil
 }
 
 // id start from 0.
@@ -112,41 +106,8 @@ func (r *ProbDtgp) RemoveRecord(id int) error {
 	if id < 0 || id > len(r.records) {
 		return fmt.Errorf("invalid id")
 	}
-	record := *r.records[id]
-	for k, suf := range record {
-		os.Remove(r.rcpath(id, k, suf))
-	}
+	r.records[id].Clear()
 	r.records = append(r.records[:id], r.records[id+1:]...)
-	return nil
-}
-
-func (r *ProbDtgp) AlterValue(id int, field string, filepath string) error {
-	logger.Printf(`AlterValue id=%d field=%s filepath=%s for group %s`, id, field, filepath, r.dir)
-	ext := path.Ext(filepath)
-	if ext == "" {
-		return fmt.Errorf("invalid filepath: no suffix found")
-	}
-	ext = ext[1:] // remove dot
-	fin, err := os.Open(filepath)
-	if err != nil {
-		return err
-	}
-	defer fin.Close()
-
-	record := *r.records[id]
-	os.Remove(r.rcpath(id, field, record[field]))
-	record[field] = ext
-
-	file, err := os.Create(r.rcpath(id, field, ext))
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	_, err = io.Copy(file, fin)
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -154,7 +115,7 @@ func LoadDtgp(dirdtgp string) (*ProbDtgp, error) {
 	var group ProbDtgp = ProbDtgp{
 		dir:     dirdtgp,
 		fields:  map[string]bool{},
-		records: []*map[string]string{},
+		records: []*Record{},
 	}
 	var fields = map[string]bool{}
 	var recordmap = map[int64]*map[string]string{}
@@ -202,9 +163,86 @@ func LoadDtgp(dirdtgp string) (*ProbDtgp, error) {
 				return nil, fmt.Errorf("invalid record: missing field %s (id=%d)", k, i)
 			}
 		}
-		group.records = append(group.records, record)
+		group.records = append(group.records, &Record{Map: *record, id: len(group.records), dtgp: &group})
 	}
 	group.fields = fields
 
 	return &group, nil
+}
+
+type Record struct {
+	Map  map[string]string
+	id   int
+	dtgp *ProbDtgp
+}
+
+func (r *Record) path(field string) string {
+	if _, ok := r.Map[field]; !ok {
+		panic("field not exist")
+	}
+	return r.dtgp.rcpath(r.id, field, r.Map[field])
+}
+func (r *Record) Clear() {
+	for k := range r.Map {
+		os.Remove(r.path(k))
+	}
+}
+
+func (r *Record) AddField(name string) error {
+	suf := "txt" // default suffix
+	r.Map[name] = suf
+	file, err := os.Create(r.path(name))
+	if err != nil {
+		return err
+	}
+	file.Close()
+	return nil
+}
+
+func (r *Record) RemoveField(name string) error {
+	os.Remove(r.path(name))
+	delete(r.Map, name)
+	return nil
+}
+
+func (r *Record) AlterValue(field string, filepath string) error {
+	logger.Printf(`AlterValue id=%d field=%s filepath=%s for group %s`, r.id, field, filepath, r.dtgp.dir)
+	if _, ok := r.Map[field]; !ok {
+		return fmt.Errorf("field not found")
+	}
+	ext := path.Ext(filepath)
+	if ext == "" {
+		return fmt.Errorf("invalid filepath: no suffix found")
+	}
+	ext = ext[1:] // remove dot
+	fin, err := os.Open(filepath)
+	if err != nil {
+		return err
+	}
+	defer fin.Close()
+
+	os.Remove(r.path(field))
+	r.Map[field] = ext
+
+	file, err := os.Create(r.path(field))
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	_, err = io.Copy(file, fin)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Get the corresponding record via id, changing suffix to file's path. Return
+// nil for invalid id.
+func (r *Record) PathMap() *map[string]string {
+	a := map[string]string{}
+	for field := range r.Map {
+		a[field] = r.path(field)
+	}
+	return &a
 }
