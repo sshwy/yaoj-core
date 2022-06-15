@@ -89,4 +89,39 @@ func TestProcessor(t *testing.T) {
 		output, _ := script.File(path.Join(dir, "dest.out")).String()
 		t.Log("output:", output)
 	})
+
+	t.Run("RunnerFileio", func(t *testing.T) {
+		compiler := processor.Compiler{}
+		res, err := compiler.Run(
+			[]string{"testdata/main2.cpp", "testdata/script.sh"},
+			[]string{path.Join(dir, "dest2"), path.Join(dir, "cp2.log"), path.Join(dir, "cpl.judger2.log")},
+		)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		if res.Code != judger.Ok {
+			t.Errorf("expect %v, found %v", judger.Ok, res.Code)
+			return
+		}
+
+		runner := processor.RunnerFileio{}
+		script.Echo("1000 1000 204857600 204857600 204857600 204857600 10\n/tmp/a.in /tmp/a.out").WriteFile(path.Join(dir, "lim2.in"))
+		res, err = runner.Run(
+			[]string{path.Join(dir, "dest2"), path.Join(dir, "a.runnerstdio.in"), path.Join(dir, "lim2.in")},
+			[]string{path.Join(dir, "dest2.out"), path.Join(dir, "dest2.err"), path.Join(dir, "dest.judger2.log")},
+		)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		t.Log(res)
+		if res.Code != judger.Ok {
+			t.Errorf("invalid result")
+			return
+		}
+
+		output, _ := script.File(path.Join(dir, "dest2.out")).String()
+		t.Log("output:", output)
+	})
 }
