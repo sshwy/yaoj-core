@@ -1,6 +1,8 @@
 package processor_test
 
 import (
+	"fmt"
+	"os"
 	"path"
 	"testing"
 
@@ -91,23 +93,10 @@ func TestProcessor(t *testing.T) {
 	})
 
 	t.Run("RunnerFileio", func(t *testing.T) {
-		compiler := processor.Compiler{}
-		res, err := compiler.Run(
-			[]string{"testdata/main2.cpp", "testdata/script.sh"},
-			[]string{path.Join(dir, "dest2"), path.Join(dir, "cp2.log"), path.Join(dir, "cpl.judger2.log")},
-		)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		if res.Code != judger.Ok {
-			t.Errorf("expect %v, found %v", judger.Ok, res.Code)
-			return
-		}
-
+		script.Exec(fmt.Sprintf("clang++ testdata/main2.cpp -o %s", path.Join(dir, "dest2"))).Wait()
 		runner := processor.RunnerFileio{}
 		script.Echo("1000 1000 204857600 204857600 204857600 204857600 10\n/tmp/a.in /tmp/a.out").WriteFile(path.Join(dir, "lim2.in"))
-		res, err = runner.Run(
+		res, err := runner.Run(
 			[]string{path.Join(dir, "dest2"), path.Join(dir, "a.runnerstdio.in"), path.Join(dir, "lim2.in")},
 			[]string{path.Join(dir, "dest2.out"), path.Join(dir, "dest2.err"), path.Join(dir, "dest.judger2.log")},
 		)
@@ -123,5 +112,25 @@ func TestProcessor(t *testing.T) {
 
 		output, _ := script.File(path.Join(dir, "dest2.out")).String()
 		t.Log("output:", output)
+	})
+
+	t.Run("CheckerTestlib", func(t *testing.T) {
+		script.Exec(fmt.Sprintf("clang++ testdata/yesno.cpp -o %s", path.Join(dir, "yesno"))).Wait()
+		script.Echo("yes").WriteFile(path.Join(dir, "inp"))
+		script.Echo("yes").WriteFile(path.Join(dir, "oup"))
+		script.Echo("yes").WriteFile(path.Join(dir, "ans"))
+		runner := processor.CheckerTestlib{}
+		info, _ := os.Stat(path.Join(dir, "yesno"))
+		t.Log(info.Mode())
+		res, err := runner.Run(
+			[]string{path.Join(dir, "yesno"), path.Join(dir, "inp"), path.Join(dir, "oup"), path.Join(dir, "ans")},
+			[]string{path.Join(dir, "rep"), path.Join(dir, "err.testlib"), path.Join(dir, "jlog.testlib")},
+		)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		t.Log(res)
+		t.Log(script.File(path.Join(dir, "rep")).String())
 	})
 }

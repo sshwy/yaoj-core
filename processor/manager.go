@@ -13,7 +13,8 @@ func Register(name string, proc Processor) {
 
 func init() {
 	Register("checker:hcmp", CheckerHcmp{})
+	Register("checker:testlib", CheckerTestlib{})
 	Register("compiler", Compiler{})
-	Register("runner:stdio", RunnerStdio{})
 	Register("runner:fileio", RunnerFileio{})
+	Register("runner:stdio", RunnerStdio{})
 }
