@@ -1,0 +1,26 @@
+name: Go
+
+on: [push, pull_request]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install neccessary commands (judger)
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y auditd flex make gengetopt bison xxd strace
+    - name: Install LLVM and Clang (judger)
+      uses: KyleMayes/install-llvm-action@v1
+      with:
+        version: "13"
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.18
+    - name: Build
+      run: go build -v ./...
+    - name: Test
+      run: go test -v ./...
