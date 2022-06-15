@@ -10,9 +10,11 @@ import (
 // `s` contains a series of number seperated by space, denoting
 // real time (ms), cpu time (ms), virtual memory (byte), real memory (byte),
 // stack memory (byte), output limit (byte), fileno limitation respectively.
-func parseJudgerLimit(s string) []judger.OptionProvider {
+func parseJudgerLimit(s string) ([]judger.OptionProvider, error) {
 	var rt, ct, vm, rm, sm, ol, fl int
-	fmt.Sscanf(s, "%d%d%d%d%d%d%d", &rt, &ct, &vm, &rm, &sm, &ol, &fl)
+	if _, err := fmt.Sscanf(s, "%d%d%d%d%d%d%d", &rt, &ct, &vm, &rm, &sm, &ol, &fl); err != nil {
+		return nil, err
+	}
 	options := []judger.OptionProvider{}
 	if rt > 0 {
 		options = append(options, judger.WithRealTime(time.Millisecond*time.Duration(rt)))
@@ -35,5 +37,5 @@ func parseJudgerLimit(s string) []judger.OptionProvider {
 	if fl > 0 {
 		options = append(options, judger.WithFileno(fl))
 	}
-	return options
+	return options, nil
 }

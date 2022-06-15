@@ -28,7 +28,6 @@ func (r CheckerHcmp) Run(input []string, output []string) (*judger.Result, error
 	defer fileb.Close()
 
 	var a, b string
-	var exitcode int
 	fmt.Fscanf(filea, "%s", &a)
 	fmt.Fscanf(fileb, "%s", &b)
 
@@ -44,7 +43,7 @@ func (r CheckerHcmp) Run(input []string, output []string) (*judger.Result, error
 		defer filec.Close()
 
 		fmt.Fprintf(filec, "wa: expected '%s', found '%s'", b, a)
-		exitcode = 1
+		var exitcode = 1
 
 		return &judger.Result{
 			Code:     judger.ExitError,

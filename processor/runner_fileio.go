@@ -6,7 +6,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/bitfield/script"
 	"github.com/sshwy/yaoj-core/judger"
 )
 
@@ -24,11 +23,11 @@ func (r RunnerFileio) Label() (inputlabel []string, outputlabel []string) {
 }
 
 func (r RunnerFileio) Run(input []string, output []string) (result *judger.Result, err error) {
-	lim, err := script.File(input[2]).String()
+	lim, err := os.ReadFile(input[2])
 	if err != nil {
 		return nil, err
 	}
-	lines := strings.Split(lim, "\n")
+	lines := strings.Split(string(lim), "\n")
 	if len(lines) != 2 {
 		return nil, fmt.Errorf("invalid config")
 	}
@@ -43,20 +42,25 @@ func (r RunnerFileio) Run(input []string, output []string) (result *judger.Resul
 		judger.WithPolicy("builtin:free"),
 		judger.WithLog(output[2], 0, false),
 	}
-	options = append(options, parseJudgerLimit(lines[0])...)
-	res, err := judger.Judge(options...)
-	if _, err := copyFile(ouf, output[0]); err != nil {
-		return nil, err
-	}
+	more, err := parseJudgerLimit(lines[0])
 	if err != nil {
 		return nil, err
 	}
+	options = append(options, more...)
+	res, err := judger.Judge(options...)
+	if err != nil {
+		return nil, err
+	}
+	copyFile(ouf, output[0])
 	return res, nil
 }
 
 var _ Processor = RunnerFileio{}
 
 func copyFile(src, dst string) (int64, error) {
+	if src == dst {
+		return 0, fmt.Errorf("same path")
+	}
 	sourceFileStat, err := os.Stat(src)
 	if err != nil {
 		return 0, err

@@ -1,7 +1,8 @@
 package processor
 
 import (
-	"github.com/bitfield/script"
+	"os"
+
 	"github.com/sshwy/yaoj-core/judger"
 )
 
@@ -18,7 +19,7 @@ func (r RunnerStdio) Label() (inputlabel []string, outputlabel []string) {
 	return []string{"executable", "stdin", "limit"}, []string{"stdout", "stderr", "judgerlog"}
 }
 func (r RunnerStdio) Run(input []string, output []string) (result *judger.Result, err error) {
-	lim, err := script.File(input[2]).String()
+	lim, err := os.ReadFile(input[2])
 	if err != nil {
 		return nil, err
 	}
@@ -28,7 +29,11 @@ func (r RunnerStdio) Run(input []string, output []string) (result *judger.Result
 		judger.WithPolicy("builtin:free"),
 		judger.WithLog(output[2], 0, false),
 	}
-	options = append(options, parseJudgerLimit(lim)...)
+	more, err := parseJudgerLimit(string(lim))
+	if err != nil {
+		return nil, err
+	}
+	options = append(options, more...)
 	res, err := judger.Judge(options...)
 	if err != nil {
 		return nil, err
