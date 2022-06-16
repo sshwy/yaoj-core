@@ -1,3 +1,3 @@
-[submodule "judger/yaoj-judger"]
-	path = judger/yaoj-judger
+[submodule "internal/judger/yaoj-judger"]
+	path = internal/judger/yaoj-judger
 	url = https://github.com/sshwy/yaoj-judger

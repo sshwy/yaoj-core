@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/sshwy/yaoj-core/judger"
+	"github.com/sshwy/yaoj-core/internal/judger"
 )
 
 // Run a program reading from file and print to file and stderr.

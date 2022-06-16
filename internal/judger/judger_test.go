@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sshwy/yaoj-core/judger"
+	"github.com/sshwy/yaoj-core/internal/judger"
 )
 
 func TestJudge(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/k0kubun/pp/v3"
-	"github.com/sshwy/yaoj-core/judger"
+	"github.com/sshwy/yaoj-core/internal/judger"
 	"github.com/sshwy/yaoj-core/workflow"
 )
 

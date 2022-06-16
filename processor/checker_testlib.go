@@ -3,7 +3,7 @@ package processor
 import (
 	"time"
 
-	"github.com/sshwy/yaoj-core/judger"
+	"github.com/sshwy/yaoj-core/internal/judger"
 )
 
 // Execute testlib checker

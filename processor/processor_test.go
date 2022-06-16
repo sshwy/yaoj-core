@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/bitfield/script"
-	"github.com/sshwy/yaoj-core/judger"
+	"github.com/sshwy/yaoj-core/internal/judger"
 	"github.com/sshwy/yaoj-core/processor"
 )
 

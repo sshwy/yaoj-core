@@ -5,7 +5,7 @@ import (
 	"path"
 	"time"
 
-	"github.com/sshwy/yaoj-core/judger"
+	"github.com/sshwy/yaoj-core/internal/judger"
 )
 
 func ExampleJudge() {

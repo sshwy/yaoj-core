@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/sshwy/yaoj-core/judger"
+	"github.com/sshwy/yaoj-core/internal/judger"
 	"github.com/sshwy/yaoj-core/workflow"
 )
 
