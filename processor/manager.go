@@ -15,6 +15,7 @@ func init() {
 	Register("checker:hcmp", CheckerHcmp{})
 	Register("checker:testlib", CheckerTestlib{})
 	Register("compiler", Compiler{})
+	Register("generator:testlib", GeneratorTestlib{})
 	Register("runner:fileio", RunnerFileio{})
 	Register("runner:stdio", RunnerStdio{})
 }
