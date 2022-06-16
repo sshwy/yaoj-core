@@ -1,4 +1,3 @@
-// problem data control
 package problem
 
 import (
@@ -90,26 +89,6 @@ func (r *Testcase) Run(dir string, submission map[string]string, fullscore float
 	return workflow.Run(r.problem.workflow, dir, r.InboundPath(submission), fullscore)
 }
 
-// Problem is stored in dir, where:
-//
-//     dir/datagroup/ stores all datagroups (e. g. testcase, compileoption, checker, std)
-//     dir/statement/ stores problem statement
-//     dir/workflow/ stores test workflow
-//
-// Problem statement:
-//
-//     dir/statement/statement.md stores markdown statement
-//
-// Problem datagroups:
-//
-//     dir/datagroup/xxx/ stores a datagroup
-//     dir/datagroup/submission/ stores a datagroup denoting submit format (special)
-//
-// Problem workflow:
-//
-//     dir/workflow/graph.json stores the workflow graph
-//     dir/workflow/analyzer.go stores custom analyzer (go plugin)
-//
 type Problem struct {
 	// where it store
 	dir       ProbRoot
@@ -118,11 +97,12 @@ type Problem struct {
 	workflow  workflow.Workflow
 }
 
-// get problem statement
+// Get problem statement.
 func (r *Problem) Stmt() []byte {
 	return r.statement
 }
 
+// Set problem statement.
 func (r *Problem) SetStmt(content []byte) error {
 	err := os.WriteFile(r.dir.StmtMkdn(), content, 0644)
 	if err != nil {
@@ -132,7 +112,7 @@ func (r *Problem) SetStmt(content []byte) error {
 	return nil
 }
 
-// create a new datagroup in dir/datagroup/[name]/
+// Create a new datagroup in dir/datagroup/[name]/
 func (r *Problem) NewDataGroup(name string) (*ProbDtgp, error) {
 	if _, ok := r.groups[name]; ok {
 		return nil, fmt.Errorf("datagroup has already existed")
@@ -149,7 +129,7 @@ func (r *Problem) NewDataGroup(name string) (*ProbDtgp, error) {
 	return dtgp, nil
 }
 
-// get a datagroup in dir/datagroup/[name]/, nil if not found
+// Get a datagroup in dir/datagroup/[name]/, nil if not found
 func (r *Problem) DataGroup(name string) *ProbDtgp {
 	return r.groups[name]
 }

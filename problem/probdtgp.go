@@ -12,10 +12,7 @@ import (
 )
 
 // Problem datagroup consists of a directory (datagroup's name) containing a
-// series of files without subdirectories. Each file is human-readbly named
-//
-//     [record rank].[field].[arbtrary suffix]
-//
+// series of files without subdirectories. Each file is human-readbly named.
 type ProbDtgp struct {
 	dir    string
 	fields map[string]bool
@@ -66,7 +63,7 @@ func (r *ProbDtgp) AddField(name string) error {
 	}
 	r.fields[name] = true
 	for _, record := range r.records {
-		if err := record.AddField(name); err != nil {
+		if err := record.addField(name); err != nil {
 			return err
 		}
 	}
@@ -80,7 +77,7 @@ func (r *ProbDtgp) RemoveField(name string) error {
 	}
 	delete(r.fields, name)
 	for _, record := range r.records {
-		if err := record.RemoveField(name); err != nil {
+		if err := record.removeField(name); err != nil {
 			return err
 		}
 	}
@@ -191,7 +188,7 @@ func (r *Record) Clear() {
 	}
 }
 
-func (r *Record) AddField(name string) error {
+func (r *Record) addField(name string) error {
 	suf := "txt" // default suffix
 	r.Map[name] = suf
 	file, err := os.Create(r.path(name))
@@ -202,7 +199,7 @@ func (r *Record) AddField(name string) error {
 	return nil
 }
 
-func (r *Record) RemoveField(name string) error {
+func (r *Record) removeField(name string) error {
 	os.Remove(r.path(name))
 	delete(r.Map, name)
 	return nil
