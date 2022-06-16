@@ -45,7 +45,7 @@ func (r ByteValue) String() string {
 
 // Code is required, others are optional
 type Result struct {
-	// 结果状态：OK/RE/MLE/...
+	// Result status：OK/RE/MLE/...
 	Code              StatusCode
 	RealTime, CpuTime *time.Duration
 	Memory            *ByteValue
@@ -57,7 +57,6 @@ func (r Result) String() string {
 		r.Code, r.Code, *r.Signal, *r.ExitCode, r.RealTime, r.CpuTime, r.Memory)
 }
 
-// 用于同步操作
 var judgeSync sync.Mutex
 
 func Judge(options ...OptionProvider) (*Result, error) {
@@ -79,10 +78,10 @@ func Judge(options ...OptionProvider) (*Result, error) {
 		v(&option)
 	}
 
-	if err := LogSet(option.Logfile, option.LogLevel, option.LogColor); err != nil {
+	if err := logSet(option.Logfile, option.LogLevel, option.LogColor); err != nil {
 		return nil, err
 	}
-	defer LogClose()
+	defer logClose()
 
 	ctxt := newContext()
 	defer ctxt.Free()
@@ -108,6 +107,13 @@ func Judge(options ...OptionProvider) (*Result, error) {
 	return &result, nil
 }
 
+// Runners differ in arguments.
+//
+// For the General: [input] [output] [outerr] [exec] [arguments...]
+//
+// For the Interactive: [exec] [interactor] [input_itct] [output_itct]
+// [outerr_itct] [outerr]. Note that stdin and stdout of interactor and
+// executable will be piped together in a two way communication.
 func WithArgument(argv ...string) OptionProvider {
 	return func(o *Option) {
 		o.Argument = argv
@@ -121,6 +127,7 @@ func WithEnviron(environ ...string) OptionProvider {
 	}
 }
 
+// Specify the runner to be used. General (default) or Interactive.
 func WithJudger(r Runner) OptionProvider {
 	return func(o *Option) {
 		o.Runner = r
@@ -141,6 +148,7 @@ func WithPolicyDir(dir string) OptionProvider {
 	}
 }
 
+// Set real time limitation
 func WithRealTime(duration time.Duration) OptionProvider {
 	return func(o *Option) {
 		o.Limit[realTime] = duration.Milliseconds()
@@ -153,6 +161,7 @@ func WithCpuTime(duration time.Duration) OptionProvider {
 	}
 }
 
+// Set virtual memory limitation
 func WithVirMemory(space ByteValue) OptionProvider {
 	return func(o *Option) {
 		o.Limit[virtMem] = int64(space)
@@ -177,12 +186,14 @@ func WithOutput(space ByteValue) OptionProvider {
 	}
 }
 
+// Set limitation on number of fileno
 func WithFileno(num int) OptionProvider {
 	return func(o *Option) {
 		o.Limit[filenoLim] = int64(num)
 	}
 }
 
+// Set logging file. Default is "runtime.log".
 func WithLog(file string, level int, color bool) OptionProvider {
 	return func(o *Option) {
 		o.Logfile = file

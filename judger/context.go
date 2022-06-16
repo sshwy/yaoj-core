@@ -1,4 +1,3 @@
-// 目前尚不支持并发
 package judger
 
 import (
@@ -54,12 +53,13 @@ func boolToInt(v bool) int {
 	}
 }
 
-// MUST be executed before creating context
-// set logging options
+// Set logging options.
+// MUST be executed before creating context.
+//
 // filename set perform log file.
 // log_level determine minimum log level (DEBUG, INFO, WARN, ERROR = 0, 1, 2, 3)
 // with_color whether use ASCII color controller character
-func LogSet(filename string, level int, color bool) error {
+func logSet(filename string, level int, color bool) error {
 	logger.Printf("LogSet: file=%s level=%d color=%v", filename, level, color)
 	var cfilename *C.char = C.CString(filename)
 	defer C.free(unsafe.Pointer(cfilename))
@@ -71,7 +71,8 @@ func LogSet(filename string, level int, color bool) error {
 	return nil
 }
 
-func LogClose() {
+// Close log file.
+func logClose() {
 	C.log_close()
 }
 
@@ -152,7 +153,7 @@ func (r context) SetRunner(argv []string, env []string) error {
 
 type Runner int
 
-// Judger type
+// Runner type
 const (
 	General     Runner = 0
 	Interactive Runner = 1
