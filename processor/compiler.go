@@ -11,6 +11,8 @@ import (
 // For input files, "source" represents source file, "script" represents
 // bash script to compile, where $1 gives source file path and $2 gives output file path
 type Compiler struct {
+	// input: source, script
+	// output: result, log, judgerlog
 }
 
 func (r Compiler) Label() (inputlabel []string, outputlabel []string) {

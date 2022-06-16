@@ -157,4 +157,23 @@ func TestProcessor(t *testing.T) {
 		t.Log(res)
 		t.Log(script.File(path.Join(dir, "igen.out")).String())
 	})
+
+	t.Run("Generator", func(t *testing.T) {
+		script.Echo("_raw").WriteFile(path.Join(dir, "rawopt"))
+		runner := processor.Generator{}
+		res, err := runner.Run(
+			[]string{path.Join(dir, "igenparam"), path.Join(dir, "rawopt")},
+			[]string{path.Join(dir, "igen2.out"), path.Join(dir, "igen2.err"), path.Join(dir, "igen2.log")},
+		)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		t.Log(res)
+		if res.Code != judger.Ok {
+			t.Errorf("invalid result")
+			return
+		}
+		t.Log(script.File(path.Join(dir, "igen2.out")).String())
+	})
 }

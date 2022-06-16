@@ -10,6 +10,8 @@ import (
 // Compares two signed huge (big) integers.
 // Validates that both integers (in the output and in the answer) are well-formatted.
 type CheckerHcmp struct {
+	// input: out, ans
+	// output: result
 }
 
 func (r CheckerHcmp) Label() (inputlabel []string, outputlabel []string) {
