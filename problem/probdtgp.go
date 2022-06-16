@@ -26,6 +26,8 @@ type ProbDtgp struct {
 func (r *ProbDtgp) rcpath(id int, field string, suf string) string {
 	return path.Join(r.dir, fmt.Sprint(id, ".", field, ".", suf))
 }
+
+// Basically the last directory of the path
 func (r *ProbDtgp) Name() string {
 	return path.Base(r.dir)
 }
@@ -39,6 +41,7 @@ func (r *ProbDtgp) Fields() []string {
 	return res
 }
 
+// Number of records.
 func (r *ProbDtgp) Len() int {
 	return len(r.records)
 }
@@ -48,6 +51,7 @@ func (r *ProbDtgp) Records() []*Record {
 	return r.records
 }
 
+// id start from 0.
 func (r *ProbDtgp) Record(id int) *Record {
 	if id < 0 || id >= len(r.records) {
 		return nil
@@ -83,7 +87,7 @@ func (r *ProbDtgp) RemoveField(name string) error {
 	return nil
 }
 
-// append an empty record, this will create am empty txt file for each field
+// Append an empty record, which will create am empty txt file for each field
 func (r *ProbDtgp) NewRecord() (*Record, error) {
 	logger.Printf(`NewRecord for group %s`, r.dir)
 	record := Record{Map: map[string]string{}, id: len(r.records), dtgp: r}
@@ -100,7 +104,6 @@ func (r *ProbDtgp) NewRecord() (*Record, error) {
 	return &record, nil
 }
 
-// id start from 0.
 func (r *ProbDtgp) RemoveRecord(id int) error {
 	logger.Printf(`RemoveRecord %d for group %s`, id, r.dir)
 	if id < 0 || id > len(r.records) {
@@ -205,6 +208,7 @@ func (r *Record) RemoveField(name string) error {
 	return nil
 }
 
+// Change a field's value to content in filepath, which also update the suffix.
 func (r *Record) AlterValue(field string, filepath string) error {
 	logger.Printf(`AlterValue id=%d field=%s filepath=%s for group %s`, r.id, field, filepath, r.dtgp.dir)
 	if _, ok := r.Map[field]; !ok {

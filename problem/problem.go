@@ -16,30 +16,45 @@ import (
 
 var logger = log.New(os.Stderr, "[problem] ", log.LstdFlags|log.Lshortfile|log.Lmsgprefix)
 
+// Root directory of a problem with some helper functions
 type ProbRoot string
 
+// string(r)
 func (r ProbRoot) Root() string {
 	return string(r)
 }
+
+// r/datagroup
 func (r ProbRoot) DtgpDir() string {
 	return path.Join(r.Root(), "datagroup")
 }
+
+// r/statement
 func (r ProbRoot) StmtDir() string {
 	return path.Join(r.Root(), "statement")
 }
+
+// r/statement/statement.md
 func (r ProbRoot) StmtMkdn() string {
 	return path.Join(r.StmtDir(), "statement.md")
 }
+
+// r/workflow
 func (r ProbRoot) WkflDir() string {
 	return path.Join(r.Root(), "workflow")
 }
+
+// r/workflow/graph.json
 func (r ProbRoot) WkflGraph() string {
 	return path.Join(r.WkflDir(), "graph.json")
 }
+
+// r/workflow/analyzer.go
 func (r ProbRoot) WkflAnyz() string {
 	return path.Join(r.WkflDir(), "analyzer.go")
 }
 
+// A testcase of a problem
 type Testcase struct {
 	// map[datagroup_name]record_id
 	groups  map[string]int
@@ -148,6 +163,7 @@ func (r *Problem) SetWkflGraph(serial []byte) error {
 	return nil
 }
 
+// Enumerate all records in all datagroups to generate all testcases.
 func (r *Problem) Testcase() []Testcase {
 	dup := func(m map[string]int) map[string]int {
 		m2 := make(map[string]int)
@@ -192,6 +208,7 @@ func (r *Problem) Testcase() []Testcase {
 	return testcases
 }
 
+// Load a problem from dir.
 func Load(dir string) (*Problem, error) {
 	root := ProbRoot(dir)
 	statement, _ := os.ReadFile(root.StmtMkdn())
