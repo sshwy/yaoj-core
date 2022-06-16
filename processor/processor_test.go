@@ -1,6 +1,7 @@
 package processor_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path"
@@ -175,5 +176,31 @@ func TestProcessor(t *testing.T) {
 			return
 		}
 		t.Log(script.File(path.Join(dir, "igen2.out")).String())
+	})
+	t.Run("manager", func(t *testing.T) {
+		mp := processor.GetAll()
+		var s = []struct {
+			Name   string   `json:"name"`
+			Input  []string `json:"input"`
+			Output []string `json:"output"`
+		}{}
+		for k, v := range mp {
+			input, output := v.Label()
+			s = append(s, struct {
+				Name   string   "json:\"name\""
+				Input  []string "json:\"input\""
+				Output []string "json:\"output\""
+			}{
+				Name:   k,
+				Input:  input,
+				Output: output,
+			})
+		}
+		buf, err := json.Marshal(s)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		t.Log(string(buf))
 	})
 }

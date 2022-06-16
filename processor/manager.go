@@ -6,6 +6,10 @@ func Get(name string) Processor {
 	return processors[name]
 }
 
+func GetAll() map[string]Processor {
+	return processors
+}
+
 // register a processor to system
 func Register(name string, proc Processor) {
 	processors[name] = proc
