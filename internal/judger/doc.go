@@ -1,5 +1,5 @@
 /*
-Package judger is the go wrapper for https://github.com/sshwy/yaoj-judger
+Package judger is the go wrapper for https://github.com/sshwy/yaoj-judger.
 
 Since this package requires a lot of depedencies and a "go generate" to
 initialize, it's not recommended to import this package.
