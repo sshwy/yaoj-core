@@ -1,3 +1,4 @@
+// Package processor provides builtin processors and processor plugin loader
 package processor
 
 import (
