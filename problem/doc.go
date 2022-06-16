@@ -6,14 +6,14 @@ Overview
 A test problem is store in a directory, for example, "dir", with following
 structure:
 
-	|-dir/datagroup/ stores all datagroups (e. g. testcase, compileoption, checker, std)
-	|---dir/datagroup/xxx/ stores a datagroup
-	|---dir/datagroup/submission/ stores a datagroup denoting submit format (special)
-	|-dir/statement/ stores problem statement
-	|---dir/statement/statement.md stores markdown statement
-	|-dir/workflow/ stores test workflow
-    |---dir/workflow/graph.json stores the workflow graph
-    |---dir/workflow/analyzer.go stores custom analyzer (go plugin)
+  |-dir/datagroup/ stores all datagroups (e. g. testcase, compileoption, checker, std)
+  |---dir/datagroup/xxx/ stores a datagroup
+  |---dir/datagroup/submission/ stores a datagroup denoting submit format (special)
+  |-dir/statement/ stores problem statement
+  |---dir/statement/statement.md stores markdown statement
+  |-dir/workflow/ stores test workflow
+  |---dir/workflow/graph.json stores the workflow graph
+  |---dir/workflow/analyzer.go stores custom analyzer (go plugin)
 
 Datagroup
 
@@ -24,7 +24,7 @@ one datagroup possess the same fields.
 A datagroup is stored in a directory, for example, "dirdgtp", with its records
 stored in the following format:
 
-	[record id].[field].[arbtrary suffix]
+  [record id].[field].[arbtrary suffix]
 
 "record id" is a integer starting from 0.
 "field" namely is the field's name.
