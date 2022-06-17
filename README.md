@@ -14,6 +14,9 @@
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 [![Apache License][license-shield]][license-url]
+![Go version (master)][gover-shield]
+![GitHub tag (latest by date)][tag-shield]
+![GitHub code size in bytes][codesize-shield]
 
 
 
@@ -136,3 +139,6 @@ Project Link: [https://github.com/sshwy/yaoj-core](https://github.com/sshwy/yaoj
 [issues-url]: https://github.com/sshwy/yaoj-core/issues
 [license-shield]: https://img.shields.io/github/license/sshwy/yaoj-core.svg
 [license-url]: https://github.com/sshwy/yaoj-core/blob/master/LICENSE
+[gover-shield]: https://img.shields.io/github/go-mod/go-version/sshwy/yaoj-core/master?filename=go.mod
+[tag-shield]: https://img.shields.io/github/v/tag/sshwy/yaoj-core?label=latest%20tag
+[codesize-shield]: https://img.shields.io/github/languages/code-size/sshwy/yaoj-core
