@@ -131,11 +131,12 @@ func TestProcessor(t *testing.T) {
 		t.Log(script.File(path.Join(dir, "igen.out")).String())
 	})
 
-	t.Run("Generator", func(t *testing.T) {
-		script.Echo("_raw").WriteFile(path.Join(dir, "rawopt"))
-		runner := processor.Generator{}
+	t.Run("Inputmaker", func(t *testing.T) {
+		script.Echo("raw").WriteFile(path.Join(dir, "rawopt"))
+		script.Echo("generator").WriteFile(path.Join(dir, "genopt"))
+		runner := processor.Inputmaker{}
 		res := runner.Run(
-			[]string{path.Join(dir, "igenparam"), path.Join(dir, "rawopt")},
+			[]string{path.Join(dir, "igenparam"), path.Join(dir, "rawopt"), "/dev/null"},
 			[]string{path.Join(dir, "igen2.out"), path.Join(dir, "igen2.err"), path.Join(dir, "igen2.log")},
 		)
 		t.Log(res)
@@ -144,6 +145,16 @@ func TestProcessor(t *testing.T) {
 			return
 		}
 		t.Log(script.File(path.Join(dir, "igen2.out")).String())
+		res = runner.Run(
+			[]string{path.Join(dir, "igenparam"), path.Join(dir, "genopt"), path.Join(dir, "igen")},
+			[]string{path.Join(dir, "igen3.out"), path.Join(dir, "igen3.err"), path.Join(dir, "igen3.log")},
+		)
+		t.Log(res)
+		if res.Code != judger.Ok {
+			t.Errorf("invalid result")
+			return
+		}
+		t.Log(script.File(path.Join(dir, "igen3.out")).String())
 	})
 	t.Run("manager", func(t *testing.T) {
 		mp := processor.GetAll()
