@@ -54,8 +54,12 @@ type Result struct {
 }
 
 func (r Result) String() string {
-	return fmt.Sprintf("%d{Code: %d, Signal: %d, RealTime: %v, CpuTime: %v, Memory: %v, ErrorMsg: \"%s\"}",
-		r.Code, r.Code, *r.Signal, r.RealTime, r.CpuTime, r.Memory, r.Msg)
+	signal := "<nil>"
+	if r.Signal != nil {
+		signal = fmt.Sprint(*r.Signal)
+	}
+	return fmt.Sprintf("%d{Code: %d, Signal: %s, RealTime: %v, CpuTime: %v, Memory: %v, ErrorMsg: \"%s\"}",
+		r.Code, r.Code, signal, r.RealTime, r.CpuTime, r.Memory, r.Msg)
 }
 
 var judgeSync sync.Mutex
