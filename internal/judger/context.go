@@ -95,7 +95,7 @@ func (r context) Result() Result {
 	return Result{
 		Code:     StatusCode(result.code),
 		Signal:   &signal,
-		ExitCode: &exitCode,
+		Msg:      fmt.Sprintf("Exit with code %d", exitCode),
 		RealTime: &realTime,
 		CpuTime:  &cpuTime,
 		Memory:   &memory,

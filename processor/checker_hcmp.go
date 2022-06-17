@@ -45,11 +45,10 @@ func (r CheckerHcmp) Run(input []string, output []string) (*judger.Result, error
 		defer filec.Close()
 
 		fmt.Fprintf(filec, "wa: expected '%s', found '%s'", b, a)
-		var exitcode = 1
 
 		return &judger.Result{
-			Code:     judger.ExitError,
-			ExitCode: &exitcode,
+			Code: judger.ExitError,
+			Msg:  "exit with code 1",
 		}, nil
 	}
 }

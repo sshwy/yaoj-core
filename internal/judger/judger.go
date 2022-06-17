@@ -49,12 +49,13 @@ type Result struct {
 	Code              StatusCode
 	RealTime, CpuTime *time.Duration
 	Memory            *ByteValue
-	Signal, ExitCode  *int
+	Signal            *int
+	Msg               string
 }
 
 func (r Result) String() string {
-	return fmt.Sprintf("%d{Code: %d, Signal: %d, ExitCode: %d, RealTime: %v, CpuTime: %v, Memory: %v}",
-		r.Code, r.Code, *r.Signal, *r.ExitCode, r.RealTime, r.CpuTime, r.Memory)
+	return fmt.Sprintf("%d{Code: %d, Signal: %d, RealTime: %v, CpuTime: %v, Memory: %v, ErrorMsg: \"%s\"}",
+		r.Code, r.Code, *r.Signal, r.RealTime, r.CpuTime, r.Memory, r.Msg)
 }
 
 var judgeSync sync.Mutex
