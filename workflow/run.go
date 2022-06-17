@@ -38,10 +38,11 @@ func Run(w Workflow, dir string, inboundPath map[string]*map[string]string, full
 		return nil, fmt.Errorf("workflow validation: %s", err.Error())
 	}
 	nodes := utils.Map(w.Node, func(node Node) RuntimeNode {
+		inLabel, ouLabel := node.Processor().Label()
 		return RuntimeNode{
 			Node:   node,
-			Input:  make([]string, len(node.InEdge)),
-			Output: make([]string, len(node.OutEdge)),
+			Input:  make([]string, len(inLabel)),
+			Output: make([]string, len(ouLabel)),
 		}
 	})
 	if len(w.Inbound) != len(inboundPath) {
@@ -51,8 +52,10 @@ func Run(w Workflow, dir string, inboundPath map[string]*map[string]string, full
 		if len(*w.Inbound[i]) != len(*inboundPath[i]) {
 			return nil, fmt.Errorf("invalid inboundPath")
 		}
-		for j, bound := range *group {
-			nodes[bound.Index].Input[bound.LabelIndex] = (*inboundPath[i])[j]
+		for j, bounds := range *group {
+			for _, bound := range bounds {
+				nodes[bound.Index].Input[bound.LabelIndex] = (*inboundPath[i])[j]
+			}
 		}
 	}
 
@@ -60,11 +63,11 @@ func Run(w Workflow, dir string, inboundPath map[string]*map[string]string, full
 		if !node.inputFullfilled() {
 			panic(fmt.Errorf("input not fullfilled"))
 		}
-		for i, edge := range node.OutEdge {
+		for i := 0; i < len(node.Output); i++ {
 			node.Output[i] = path.Join(dir, utils.RandomString(10))
-			if edge.Bound != nil {
-				nodes[edge.Bound.Index].Input[edge.Bound.LabelIndex] = node.Output[i]
-			}
+		}
+		for _, edge := range w.EdgeFrom(id) {
+			nodes[edge.To.Index].Input[edge.To.LabelIndex] = nodes[edge.From.Index].Output[edge.From.LabelIndex]
 		}
 		logger.Printf("run node[%d]: input %+v output %+v", id, node.Input, node.Output)
 		result, err := node.Processor().Run(node.Input, node.Output)

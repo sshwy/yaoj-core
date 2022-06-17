@@ -255,7 +255,7 @@ func New(dir string) (*Problem, error) {
 
 	if _, err := file.Write((&workflow.WorkflowGraph{
 		Node:    []workflow.Node{},
-		Inbound: map[string]*map[string]workflow.Bound{},
+		Inbound: map[string]*map[string][]workflow.Inbound{},
 	}).Serialize()); err != nil {
 		return nil, err
 	}

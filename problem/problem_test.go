@@ -102,7 +102,7 @@ int main () { int a, b; cin >> a >> b; cout << a + b << endl; return 0; }
 	o0.AlterValue("limitation", path.Join(dir, "cpl.txt"))
 	o0.AlterValue("compilescript", path.Join(dir, "script.sh"))
 
-	err = prob.SetWkflGraph([]byte(`{"Node":[{"ProcName":"compiler","InEdge":[{"Bound":null,"Label":"source"},{"Bound":null,"Label":"script"}],"OutEdge":[{"Bound":{"Index":1,"LabelIndex":0},"Label":"result"},{"Bound":null,"Label":"log"},{"Bound":null,"Label":"judgerlog"}]},{"ProcName":"runner:stdio","InEdge":[{"Bound":{"Index":0,"LabelIndex":0},"Label":"executable"},{"Bound":null,"Label":"stdin"},{"Bound":null,"Label":"limit"}],"OutEdge":[{"Bound":{"Index":2,"LabelIndex":0},"Label":"stdout"},{"Bound":null,"Label":"stderr"},{"Bound":null,"Label":"judgerlog"}]},{"ProcName":"checker:hcmp","InEdge":[{"Bound":{"Index":1,"LabelIndex":0},"Label":"out"},{"Bound":null,"Label":"ans"}],"OutEdge":[{"Bound":null,"Label":"result"}]}],"Inbound":{"option":{"compilescript":{"Index":0,"LabelIndex":1},"limitation":{"Index":1,"LabelIndex":2}},"submission":{"source":{"Index":0,"LabelIndex":0}},"testcase":{"answer":{"Index":2,"LabelIndex":1},"input":{"Index":1,"LabelIndex":1}}}}`))
+	err = prob.SetWkflGraph([]byte(`{"Node":[{"ProcName":"compiler"},{"ProcName":"runner:stdio"},{"ProcName":"checker:hcmp"}],"Edge":[{"From":{"Index":0,"LabelIndex":0},"To":{"Index":1,"LabelIndex":0}},{"From":{"Index":1,"LabelIndex":0},"To":{"Index":2,"LabelIndex":0}}],"Inbound":{"option":{"compilescript":[{"Index":0,"LabelIndex":1}],"limitation":[{"Index":1,"LabelIndex":2}]},"submission":{"source":[{"Index":0,"LabelIndex":0}]},"testcase":{"answer":[{"Index":2,"LabelIndex":1}],"input":[{"Index":1,"LabelIndex":1}]}}}`))
 	if err != nil {
 		t.Error(err)
 		return

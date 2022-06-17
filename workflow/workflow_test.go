@@ -33,88 +33,59 @@ func (r testanalyzer) Analyze(nodes []workflow.RuntimeNode, score float64) workf
 func TestWorkflow(t *testing.T) {
 	w := workflow.Workflow{
 		WorkflowGraph: &workflow.WorkflowGraph{
-			Node: []workflow.Node{
+			Edge: []workflow.Edge{
 				{
-					ProcName: "compiler",
-					InEdge:   []workflow.Edge{{Label: "source"}, {Label: "script"}},
-					OutEdge: []workflow.Edge{
-						{
-							Label: "result",
-							Bound: &workflow.Bound{
-								Index:      1, // runner
-								LabelIndex: 0, // executable
-							},
-						},
-						{Label: "log"},
-						{Label: "judgerlog"},
+					From: workflow.Outbound{
+						Index:      0, // compiler
+						LabelIndex: 0, // result
+					},
+					To: workflow.Inbound{
+						Index:      1, // runner
+						LabelIndex: 0, // executable
 					},
 				},
 				{
-					ProcName: "runner:stdio",
-					InEdge: []workflow.Edge{
-						{
-							Label: "executable",
-							Bound: &workflow.Bound{
-								Index:      0, // compiler
-								LabelIndex: 0, // result
-							},
-						},
-						{Label: "stdin"},
-						{Label: "limit"},
+					From: workflow.Outbound{
+						Index:      1, // runner
+						LabelIndex: 0, // stdout
 					},
-					OutEdge: []workflow.Edge{
-						{
-							Label: "stdout",
-							Bound: &workflow.Bound{
-								Index:      2, // checker
-								LabelIndex: 0, // out,
-							},
-						},
-						{Label: "stderr"},
-						{Label: "judgerlog"},
+					To: workflow.Inbound{
+						Index:      2, // checker
+						LabelIndex: 0, // out
 					},
-				},
-				{
-					ProcName: "checker:hcmp",
-					InEdge: []workflow.Edge{
-						{
-							Label: "out",
-							Bound: &workflow.Bound{
-								Index:      1, // runner
-								LabelIndex: 0, // stdout
-							},
-						},
-						{Label: "ans"},
-					},
-					OutEdge: []workflow.Edge{{Label: "result"}},
 				},
 			},
-			Inbound: map[string]*map[string]workflow.Bound{
+			Node: []workflow.Node{
+				{ProcName: "compiler"},
+				{ProcName: "runner:stdio"},
+				{ProcName: "checker:hcmp"},
+			},
+			Inbound: map[string]*map[string][]workflow.Inbound{
 				"testcase": {
-					"input": {
+					"input": {{
 						Index:      1, // runner:stdio
 						LabelIndex: 1, // stdin
-					},
-					"answer": {
+					}},
+					"answer": {{
 						Index:      2, // checker
 						LabelIndex: 1, // ans
-					},
+					}},
 				},
 				"option": {
-					"limitation": {
+					"limitation": {{
 						Index:      1, // runner:stdio
 						LabelIndex: 2, // limit
-					},
-					"compilescript": {
+					}},
+					"compilescript": {{
 						Index:      0, // compiler
 						LabelIndex: 1, // script
-					},
+					}},
 				},
 				"submission": {
-					"source": {
+					"source": {{
 						Index:      0, // compiler
 						LabelIndex: 0, // source
-					},
+					}},
 				},
 			},
 		},
