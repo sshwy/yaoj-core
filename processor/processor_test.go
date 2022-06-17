@@ -31,21 +31,13 @@ func TestProcessor(t *testing.T) {
 		script.Echo("12345").WriteFile(fa)
 		script.Echo("12345").WriteFile(fb)
 		checker := processor.CheckerHcmp{}
-		res, err := checker.Run([]string{fa, fb}, []string{fc})
-		if err != nil {
-			t.Error(err)
-			return
-		}
+		res := checker.Run([]string{fa, fb}, []string{fc})
 		if res.Code != judger.Ok {
 			t.Errorf("expect %v, found %v", judger.Ok, res.Code)
 			return
 		}
 		script.Echo("12346").WriteFile(fb)
-		res, err = checker.Run([]string{fa, fb}, []string{fc})
-		if err != nil {
-			t.Error(err)
-			return
-		}
+		res = checker.Run([]string{fa, fb}, []string{fc})
 		if res.Code != judger.ExitError {
 			t.Errorf("expect %v, found %v", judger.ExitError, res.Code)
 			return
@@ -54,14 +46,10 @@ func TestProcessor(t *testing.T) {
 
 	t.Run("Compiler", func(t *testing.T) {
 		compiler := processor.Compiler{}
-		res, err := compiler.Run(
+		res := compiler.Run(
 			[]string{"testdata/main.cpp", "testdata/script.sh"},
 			[]string{path.Join(dir, "dest"), path.Join(dir, "cp.log"), path.Join(dir, "cpl.judger.log")},
 		)
-		if err != nil {
-			t.Error(err)
-			return
-		}
 		if res.Code != judger.Ok {
 			t.Errorf("expect %v, found %v", judger.Ok, res.Code)
 			return
@@ -75,14 +63,10 @@ func TestProcessor(t *testing.T) {
 		script.Echo("1 2").WriteFile(fa)
 		script.Echo("1000 1000 204857600 204857600 204857600 204857600 10").WriteFile(fb)
 		runner := processor.RunnerStdio{}
-		res, err := runner.Run(
+		res := runner.Run(
 			[]string{path.Join(dir, "dest"), fa, fb},
 			[]string{path.Join(dir, "dest.out"), path.Join(dir, "dest.err"), path.Join(dir, "dest.judger.log")},
 		)
-		if err != nil {
-			t.Error(err)
-			return
-		}
 		t.Log(res)
 		if res.Code != judger.Ok {
 			t.Errorf("invalid result")
@@ -97,14 +81,10 @@ func TestProcessor(t *testing.T) {
 		script.Exec(fmt.Sprintf("clang++ testdata/main2.cpp -o %s", path.Join(dir, "dest2"))).Wait()
 		runner := processor.RunnerFileio{}
 		script.Echo("1000 1000 204857600 204857600 204857600 204857600 10\n/tmp/a.in /tmp/a.out").WriteFile(path.Join(dir, "lim2.in"))
-		res, err := runner.Run(
+		res := runner.Run(
 			[]string{path.Join(dir, "dest2"), path.Join(dir, "a.rsi.in"), path.Join(dir, "lim2.in")},
 			[]string{path.Join(dir, "dest2.out"), path.Join(dir, "dest2.err"), path.Join(dir, "dest.judger2.log")},
 		)
-		if err != nil {
-			t.Error(err)
-			return
-		}
 		t.Log(res)
 		if res.Code != judger.Ok {
 			t.Errorf("invalid result")
@@ -123,14 +103,10 @@ func TestProcessor(t *testing.T) {
 		runner := processor.CheckerTestlib{}
 		info, _ := os.Stat(path.Join(dir, "yesno"))
 		t.Log(info.Mode())
-		res, err := runner.Run(
+		res := runner.Run(
 			[]string{path.Join(dir, "yesno"), path.Join(dir, "inp"), path.Join(dir, "oup"), path.Join(dir, "ans")},
 			[]string{path.Join(dir, "rep"), path.Join(dir, "err.testlib"), path.Join(dir, "jlog.testlib")},
 		)
-		if err != nil {
-			t.Error(err)
-			return
-		}
 		if res.Code != judger.Ok {
 			t.Errorf("invalid result")
 			return
@@ -143,14 +119,10 @@ func TestProcessor(t *testing.T) {
 		script.Exec(fmt.Sprintf("clang++ testdata/igen.cpp -o %s", path.Join(dir, "igen"))).Wait()
 		script.Echo("1 4 2 8 5    7").WriteFile(path.Join(dir, "igenparam"))
 		runner := processor.GeneratorTestlib{}
-		res, err := runner.Run(
+		res := runner.Run(
 			[]string{path.Join(dir, "igen"), path.Join(dir, "igenparam")},
 			[]string{path.Join(dir, "igen.out"), path.Join(dir, "igen.err"), path.Join(dir, "igen.log")},
 		)
-		if err != nil {
-			t.Error(err)
-			return
-		}
 		if res.Code != judger.Ok {
 			t.Errorf("invalid result")
 			return
@@ -162,14 +134,10 @@ func TestProcessor(t *testing.T) {
 	t.Run("Generator", func(t *testing.T) {
 		script.Echo("_raw").WriteFile(path.Join(dir, "rawopt"))
 		runner := processor.Generator{}
-		res, err := runner.Run(
+		res := runner.Run(
 			[]string{path.Join(dir, "igenparam"), path.Join(dir, "rawopt")},
 			[]string{path.Join(dir, "igen2.out"), path.Join(dir, "igen2.err"), path.Join(dir, "igen2.log")},
 		)
-		if err != nil {
-			t.Error(err)
-			return
-		}
 		t.Log(res)
 		if res.Code != judger.Ok {
 			t.Errorf("invalid result")

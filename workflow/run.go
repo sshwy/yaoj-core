@@ -70,10 +70,7 @@ func Run(w Workflow, dir string, inboundPath map[string]*map[string]string, full
 			nodes[edge.To.Index].Input[edge.To.LabelIndex] = nodes[edge.From.Index].Output[edge.From.LabelIndex]
 		}
 		logger.Printf("run node[%d]: input %+v output %+v", id, node.Input, node.Output)
-		result, err := node.Processor().Run(node.Input, node.Output)
-		if err != nil {
-			return nil, err
-		}
+		result := node.Processor().Run(node.Input, node.Output)
 		nodes[id].Result = result
 	}
 

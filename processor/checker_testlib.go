@@ -16,7 +16,7 @@ func (r CheckerTestlib) Label() (inputlabel []string, outputlabel []string) {
 	return []string{"checker", "input", "output", "answer"},
 		[]string{"xmlreport", "stderr", "judgerlog"}
 }
-func (r CheckerTestlib) Run(input []string, output []string) (*judger.Result, error) {
+func (r CheckerTestlib) Run(input []string, output []string) *judger.Result {
 	res, err := judger.Judge(
 		judger.WithArgument("/dev/null", "/dev/null", output[1], input[0],
 			input[1], input[2], input[3], output[0], "-appes"),
@@ -27,9 +27,12 @@ func (r CheckerTestlib) Run(input []string, output []string) (*judger.Result, er
 		judger.WithOutput(10*judger.MB),
 	)
 	if err != nil {
-		return nil, err
+		return &judger.Result{
+			Code: judger.SystemError,
+			Msg:  err.Error(),
+		}
 	}
-	return res, nil
+	return res
 }
 
 var _ Processor = CheckerTestlib{}

@@ -19,9 +19,12 @@ func (r Compiler) Label() (inputlabel []string, outputlabel []string) {
 	return []string{"source", "script"}, []string{"result", "log", "judgerlog"}
 }
 
-func (r Compiler) Run(input []string, output []string) (*judger.Result, error) {
+func (r Compiler) Run(input []string, output []string) *judger.Result {
 	if err := os.Chmod(input[1], 0744); err != nil { // -rwxr--r--
-		return nil, err
+		return &judger.Result{
+			Code: judger.RuntimeError,
+			Msg:  "open script: " + err.Error(),
+		}
 	}
 	defer os.Chmod(input[1], 0644) // -rw-r--r--
 	res, err := judger.Judge(
@@ -33,9 +36,12 @@ func (r Compiler) Run(input []string, output []string) (*judger.Result, error) {
 		judger.WithOutput(10*judger.MB),
 	)
 	if err != nil {
-		return nil, err
+		return &judger.Result{
+			Code: judger.SystemError,
+			Msg:  err.Error(),
+		}
 	}
-	return res, nil
+	return res
 }
 
 var _ Processor = Compiler{}

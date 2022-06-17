@@ -18,10 +18,13 @@ type GeneratorTestlib struct {
 func (r GeneratorTestlib) Label() (inputlabel []string, outputlabel []string) {
 	return []string{"generator", "arguments"}, []string{"output", "stderr", "judgerlog"}
 }
-func (r GeneratorTestlib) Run(input []string, output []string) (result *judger.Result, err error) {
+func (r GeneratorTestlib) Run(input []string, output []string) *judger.Result {
 	args, err := os.ReadFile(input[1])
 	if err != nil {
-		return nil, err
+		return &judger.Result{
+			Code: judger.RuntimeError,
+			Msg:  "open arguments: " + err.Error(),
+		}
 	}
 	argv := strings.Split(string(args), " ")
 	finalArgv := []string{"/dev/null", output[0], output[1], input[0]}
@@ -39,9 +42,12 @@ func (r GeneratorTestlib) Run(input []string, output []string) (result *judger.R
 		judger.WithOutput(10*judger.MB),
 	)
 	if err != nil {
-		return nil, err
+		return &judger.Result{
+			Code: judger.SystemError,
+			Msg:  err.Error(),
+		}
 	}
-	return res, nil
+	return res
 }
 
 var _ Processor = GeneratorTestlib{}

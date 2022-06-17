@@ -17,15 +17,21 @@ type CheckerHcmp struct {
 func (r CheckerHcmp) Label() (inputlabel []string, outputlabel []string) {
 	return []string{"out", "ans"}, []string{"result"}
 }
-func (r CheckerHcmp) Run(input []string, output []string) (*judger.Result, error) {
+func (r CheckerHcmp) Run(input []string, output []string) *judger.Result {
 	filea, err := os.Open(input[0])
 	if err != nil {
-		return nil, err
+		return &judger.Result{
+			Code: judger.RuntimeError,
+			Msg:  fmt.Sprintf("open (out) %s: %s", input[0], err.Error()),
+		}
 	}
 	defer filea.Close()
 	fileb, err := os.Open(input[1])
 	if err != nil {
-		return nil, err
+		return &judger.Result{
+			Code: judger.RuntimeError,
+			Msg:  fmt.Sprintf("open (ans) %s: %s", input[1], err.Error()),
+		}
 	}
 	defer fileb.Close()
 
@@ -36,11 +42,14 @@ func (r CheckerHcmp) Run(input []string, output []string) (*judger.Result, error
 	if a == b {
 		return &judger.Result{
 			Code: judger.Ok,
-		}, nil
+		}
 	} else {
 		filec, err := os.OpenFile(output[0], os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0744)
 		if err != nil {
-			return nil, err
+			return &judger.Result{
+				Code: judger.RuntimeError,
+				Msg:  fmt.Sprintf("open (result) %s: %s", output[0], err.Error()),
+			}
 		}
 		defer filec.Close()
 
@@ -49,7 +58,7 @@ func (r CheckerHcmp) Run(input []string, output []string) (*judger.Result, error
 		return &judger.Result{
 			Code: judger.ExitError,
 			Msg:  "exit with code 1",
-		}, nil
+		}
 	}
 }
 

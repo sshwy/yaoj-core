@@ -63,15 +63,17 @@ type pluginProcessor struct {
 
 var _ Processor = (*pluginProcessor)(nil)
 
-func (r *pluginProcessor) Run(input []string, output []string) (result *judger.Result, err error) {
+func (r *pluginProcessor) Run(input []string, output []string) *judger.Result {
 	code := r.runner(input, output)
 	if code != 0 {
 		return &judger.Result{
 			Code: judger.ExitError,
 			Msg:  fmt.Sprintf("exit with code %d", code),
-		}, nil
+		}
 	} else {
-		return nil, nil
+		return &judger.Result{
+			Code: judger.Ok,
+		}
 	}
 }
 

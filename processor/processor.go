@@ -11,5 +11,5 @@ type Processor interface {
 	Label() (inputlabel []string, outputlabel []string)
 	// Given a fixed number of input files, generate output to  corresponding files
 	// with execution result. It's ok if result == nil, which means success.
-	Run(input []string, output []string) (result *judger.Result, err error)
+	Run(input []string, output []string) (result *judger.Result)
 }

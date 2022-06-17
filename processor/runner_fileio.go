@@ -22,19 +22,28 @@ func (r RunnerFileio) Label() (inputlabel []string, outputlabel []string) {
 	return []string{"executable", "fin", "config"}, []string{"fout", "stderr", "judgerlog"}
 }
 
-func (r RunnerFileio) Run(input []string, output []string) (result *judger.Result, err error) {
+func (r RunnerFileio) Run(input []string, output []string) *judger.Result {
 	lim, err := os.ReadFile(input[2])
 	if err != nil {
-		return nil, err
+		return &judger.Result{
+			Code: judger.RuntimeError,
+			Msg:  "open config: " + err.Error(),
+		}
 	}
 	lines := strings.Split(string(lim), "\n")
 	if len(lines) != 2 {
-		return nil, fmt.Errorf("invalid config")
+		return &judger.Result{
+			Code: judger.RuntimeError,
+			Msg:  "invalid config",
+		}
 	}
 	var inf, ouf string
 	fmt.Sscanf(lines[1], "%s%s", &inf, &ouf)
 	if _, err := copyFile(input[1], inf); err != nil {
-		return nil, err
+		return &judger.Result{
+			Code: judger.RuntimeError,
+			Msg:  "copy: " + err.Error(),
+		}
 	}
 	options := []judger.OptionProvider{
 		judger.WithArgument("/dev/null", "/dev/null", output[1], input[0]),
@@ -44,15 +53,21 @@ func (r RunnerFileio) Run(input []string, output []string) (result *judger.Resul
 	}
 	more, err := parseJudgerLimit(lines[0])
 	if err != nil {
-		return nil, err
+		return &judger.Result{
+			Code: judger.RuntimeError,
+			Msg:  "parse judger limit: " + err.Error(),
+		}
 	}
 	options = append(options, more...)
 	res, err := judger.Judge(options...)
 	if err != nil {
-		return nil, err
+		return &judger.Result{
+			Code: judger.SystemError,
+			Msg:  err.Error(),
+		}
 	}
 	copyFile(ouf, output[0])
-	return res, nil
+	return res
 }
 
 var _ Processor = RunnerFileio{}
