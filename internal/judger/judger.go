@@ -103,12 +103,7 @@ func Judge(options ...OptionProvider) (*Result, error) {
 		return nil, err
 	}
 
-	if err := ctxt.Run(option.Runner); err != nil {
-		return nil, err
-	}
-
-	result := ctxt.Result()
-
+	result := ctxt.RunFork(option.Runner)
 	return &result, nil
 }
 

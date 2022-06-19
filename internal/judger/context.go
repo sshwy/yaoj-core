@@ -175,6 +175,24 @@ func (r context) Run(runner Runner) error {
 	return nil
 }
 
+func (r context) RunFork(runner Runner) Result {
+	result := C.yjudger_general_fork(r.ctxt)
+	signal := int(result.signal)
+	exitCode := int(result.exit_code)
+	realTime := time.Duration(int(result.real_time) * int(time.Millisecond))
+	cpuTime := time.Duration(int(result.cpu_time) * int(time.Millisecond))
+	memory := ByteValue(result.real_memory)
+
+	return Result{
+		Code:     StatusCode(result.code),
+		Signal:   &signal,
+		Msg:      fmt.Sprintf("Exit with code %d", exitCode),
+		RealTime: &realTime,
+		CpuTime:  &cpuTime,
+		Memory:   &memory,
+	}
+}
+
 // short cut for Limitation
 type L map[LimitType]int64
 
