@@ -3,7 +3,9 @@ package utils
 import (
 	"crypto/sha256"
 	"fmt"
+	"io"
 	"math/rand"
+	"os"
 )
 
 type HashValue []byte
@@ -48,4 +50,33 @@ func RandomString(n int) string {
 		b[i] = letters[rand.Intn(len(letters))]
 	}
 	return string(b)
+}
+
+func CopyFile(src, dst string) (int64, error) {
+	// log.Printf("CopyFile %s %s", src, dst)
+	if src == dst {
+		return 0, fmt.Errorf("same path")
+	}
+	sourceFileStat, err := os.Stat(src)
+	if err != nil {
+		return 0, err
+	}
+
+	if !sourceFileStat.Mode().IsRegular() {
+		return 0, fmt.Errorf("%s is not a regular file", src)
+	}
+
+	source, err := os.Open(src)
+	if err != nil {
+		return 0, err
+	}
+	defer source.Close()
+
+	destination, err := os.Create(dst)
+	if err != nil {
+		return 0, err
+	}
+	defer destination.Close()
+	nBytes, err := io.Copy(destination, source)
+	return nBytes, err
 }
