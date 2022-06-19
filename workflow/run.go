@@ -1,16 +1,29 @@
 package workflow
 
 import (
+	"crypto/sha256"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path"
 
+	"github.com/k0kubun/pp/v3"
 	"github.com/sshwy/yaoj-core/internal/judger"
 	"github.com/sshwy/yaoj-core/utils"
 )
 
 var logger = log.New(os.Stderr, "[workflow] ", log.LstdFlags|log.Lshortfile|log.Lmsgprefix)
+
+type sha [32]byte
+
+func (r sha) String() string {
+	s := ""
+	for _, v := range r {
+		s += fmt.Sprintf("%02x", v)
+	}
+	return s
+}
 
 type RuntimeNode struct {
 	Node
@@ -20,6 +33,7 @@ type RuntimeNode struct {
 	Output []string
 	// result of processor
 	Result *judger.Result
+	hash   sha
 }
 
 func (r *RuntimeNode) inputFullfilled() bool {
@@ -29,6 +43,60 @@ func (r *RuntimeNode) inputFullfilled() bool {
 		}
 	}
 	return true
+}
+
+// for any error, return empty hash
+func fileHash(name string) sha {
+	hash := sha256.New()
+	f, err := os.Open(name)
+	if err != nil {
+		return sha{}
+	}
+	defer f.Close()
+
+	if _, err := io.Copy(hash, f); err != nil {
+		return sha{}
+	}
+	var b = hash.Sum(nil)
+	// pp.Print(b)
+	if len(b) != 32 {
+		pp.Print(b)
+		panic(b)
+	}
+	return *(*sha)(b)
+}
+
+// sum up hash of all input files
+func (r *RuntimeNode) calcHash() {
+	hash := sha256.New()
+	for _, path := range r.Input {
+		hashval := fileHash(path)
+		log.Print(path, " ", hashval)
+		hash.Write(hashval[:])
+	}
+	var b = hash.Sum(nil)
+	// pp.Print(b)
+	if len(b) != 32 {
+		pp.Print(b)
+		panic(b)
+	}
+	r.hash = *(*sha)(b)
+}
+
+// generate hash for output files
+func (r *RuntimeNode) outputHash() (res []sha) {
+	if r.hash == (sha{}) {
+		r.calcHash()
+	}
+	hash := sha256.New()
+	hash.Write(r.hash[:])
+	res = make([]sha, len(r.Output))
+	_, labels := r.Processor().Label()
+	for i, label := range labels {
+		hash.Write([]byte(label))
+		res[i] = *(*sha)(hash.Sum(nil))
+	}
+	return
 }
 
 // perform a workflow in a directory.
@@ -46,13 +114,13 @@ func Run(w Workflow, dir string, inboundPath map[string]*map[string]string, full
 		}
 	})
 	if len(w.Inbound) != len(inboundPath) {
-		return nil, fmt.Errorf("invalid inboundPath")
+		return nil, fmt.Errorf("invalid inboundPath: missing field")
 	}
 	for i, group := range w.Inbound {
-		if len(*w.Inbound[i]) != len(*inboundPath[i]) {
-			return nil, fmt.Errorf("invalid inboundPath")
-		}
 		for j, bounds := range *group {
+			if _, ok := (*inboundPath[i])[j]; !ok {
+				return nil, fmt.Errorf("invalid inboundPath: missing field %s %s", i, j)
+			}
 			for _, bound := range bounds {
 				nodes[bound.Index].Input[bound.LabelIndex] = (*inboundPath[i])[j]
 			}
@@ -63,6 +131,9 @@ func Run(w Workflow, dir string, inboundPath map[string]*map[string]string, full
 		if !node.inputFullfilled() {
 			panic(fmt.Errorf("input not fullfilled"))
 		}
+		// node.calcHash()
+		// log.Print(node.outputHash())
+		// log.Printf("%d, %v", id, node.hash)
 		for i := 0; i < len(node.Output); i++ {
 			node.Output[i] = path.Join(dir, utils.RandomString(10))
 		}

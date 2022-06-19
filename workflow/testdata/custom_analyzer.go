@@ -12,14 +12,18 @@ func (r analyzerPlugin) Analyze(nodes []workflow.RuntimeNode, fullscore float64)
 	for _, node := range nodes {
 		if node.Result.Code != judger.Ok {
 			return workflow.Result{
-				Score:     0,
-				Fullscore: fullscore,
+				ResultMeta: workflow.ResultMeta{
+					Score:     0,
+					Fullscore: fullscore,
+				},
 			}
 		}
 	}
 	return workflow.Result{
-		Score:     fullscore,
-		Fullscore: fullscore,
+		ResultMeta: workflow.ResultMeta{
+			Score:     fullscore,
+			Fullscore: fullscore,
+		},
 	}
 }
 

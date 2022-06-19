@@ -18,15 +18,19 @@ func (r testanalyzer) Analyze(nodes []workflow.RuntimeNode, score float64) workf
 	}
 	if nodes[2].Result.Code == judger.Ok {
 		return workflow.Result{
-			Fullscore: score,
-			Score:     score,
-			File:      display,
+			ResultMeta: workflow.ResultMeta{
+				Fullscore: score,
+				Score:     score,
+			},
+			File: display,
 		}
 	}
 	return workflow.Result{
-		Fullscore: score,
-		Score:     0,
-		File:      display,
+		ResultMeta: workflow.ResultMeta{
+			Fullscore: score,
+			Score:     0,
+		},
+		File: display,
 	}
 }
 

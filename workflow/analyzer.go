@@ -5,6 +5,7 @@ import (
 	goPlugin "plugin"
 
 	"github.com/sshwy/yaoj-core/internal/judger"
+	"github.com/sshwy/yaoj-core/utils"
 )
 
 // Analyzer generates result of a workflow.
@@ -34,15 +35,25 @@ type DefaultAnalyzer struct {
 }
 
 func (r DefaultAnalyzer) Analyze(nodes []RuntimeNode, fullscore float64) Result {
+	res := Result{
+		ResultMeta: ResultMeta{
+			Score:     fullscore,
+			Fullscore: fullscore,
+			Title:     "Accepted",
+		},
+	}
+
 	for i, node := range nodes {
 		if node.Result == nil {
 			continue
 		}
 		if node.Result.Code != judger.Ok {
 			return Result{
-				Score:     0,
-				Fullscore: fullscore,
-				Title:     "Not Accepted",
+				ResultMeta: ResultMeta{
+					Score:     0,
+					Fullscore: fullscore,
+					Title:     "Not Accepted",
+				},
 				File: []ResultFileDisplay{
 					{
 						Title:   "Error Node",
@@ -51,12 +62,12 @@ func (r DefaultAnalyzer) Analyze(nodes []RuntimeNode, fullscore float64) Result 
 				},
 			}
 		}
+		if node.Key {
+			res.ResultMeta.Memory += utils.ByteValue(*node.Result.Memory)
+			res.ResultMeta.Time += *node.Result.CpuTime
+		}
 	}
-	return Result{
-		Score:     fullscore,
-		Fullscore: fullscore,
-		Title:     "Accepted",
-	}
+	return res
 }
 
 var _ Analyzer = DefaultAnalyzer{}
