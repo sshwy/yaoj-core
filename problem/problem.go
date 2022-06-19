@@ -1,137 +1,103 @@
 package problem
 
 import (
+	"encoding/json"
 	"fmt"
-	"hash/crc64"
-	"io/fs"
 	"log"
 	"os"
 	"path"
-	"path/filepath"
-	"sort"
+	"strconv"
 
+	"github.com/sshwy/yaoj-core/utils"
 	"github.com/sshwy/yaoj-core/workflow"
 )
 
-var logger = log.New(os.Stderr, "[problem] ", log.LstdFlags|log.Lshortfile|log.Lmsgprefix)
-
-// Root directory of a problem with some helper functions
-type ProbRoot string
-
-// string(r)
-func (r ProbRoot) Root() string {
-	return string(r)
-}
-
-// r/datagroup
-func (r ProbRoot) DtgpDir() string {
-	return path.Join(r.Root(), "datagroup")
-}
-
-// r/statement
-func (r ProbRoot) StmtDir() string {
-	return path.Join(r.Root(), "statement")
-}
-
-// r/statement/statement.md
-func (r ProbRoot) StmtMkdn() string {
-	return path.Join(r.StmtDir(), "statement.md")
-}
-
-// r/workflow
-func (r ProbRoot) WkflDir() string {
-	return path.Join(r.Root(), "workflow")
-}
-
-// r/workflow/graph.json
-func (r ProbRoot) WkflGraph() string {
-	return path.Join(r.WkflDir(), "graph.json")
-}
-
-// r/workflow/analyzer.go
-func (r ProbRoot) WkflAnyz() string {
-	return path.Join(r.WkflDir(), "analyzer.go")
-}
-
-// A testcase of a problem
-type Testcase struct {
-	// map[datagroup_name]record_id
-	groups  map[string]int
-	problem *Problem
-}
-
-func (r *Testcase) ID() uint64 {
-	var a = make([]string, 0, len(r.groups))
-	for name, id := range r.groups {
-		a = append(a, fmt.Sprint(name, id))
-	}
-	sort.Slice(a, func(i, j int) bool {
-		return a[i] < a[j]
-	})
-	hash := crc64.New(crc64.MakeTable(crc64.ISO))
-	for _, v := range a {
-		hash.Write([]byte(v))
-	}
-	return hash.Sum64()
-}
-
-func (r *Testcase) InboundPath(submission map[string]string) map[string]*map[string]string {
-	a := map[string]*map[string]string{}
-	for name, id := range r.groups {
-		a[name] = r.problem.groups[name].Record(id).PathMap()
-	}
-	a["submission"] = &submission
-	return a
-}
-
-// Run the testcase in dir with submission and fullscore provided.
-func (r *Testcase) Run(dir string, submission map[string]string, fullscore float64) (*workflow.Result, error) {
-	return workflow.Run(r.problem.workflow, dir, r.InboundPath(submission), fullscore)
-}
-
 type Problem struct {
-	// where it store
-	dir       ProbRoot
-	statement []byte
-	groups    map[string]*ProbDtgp
+	Fullscore float64
+	dir       string
 	workflow  workflow.Workflow
+	// _subtaskid, _score ("average", {number})
+	Tests table
+	// _subtaskid, _score
+	Subtasks   table
+	Static     table
+	Submission table
 }
 
-// Get problem statement.
-func (r *Problem) Stmt() []byte {
-	return r.statement
+// Add file to r.dir/patch and return relative path
+func (r *Problem) AddFile(name string, pathname string) (string, error) {
+	if _, err := utils.CopyFile(pathname, path.Join(r.dir, "patch", name)); err != nil {
+		return "", err
+	}
+	return path.Join("patch", name), nil
 }
 
-// Set problem statement.
-func (r *Problem) SetStmt(content []byte) error {
-	err := os.WriteFile(r.dir.StmtMkdn(), content, 0644)
+// export the problem's data to another empty dir and change itself to the new one
+func (r *Problem) Export(dir string) error {
+	os.Mkdir(path.Join(dir, "workflow"), os.ModePerm)
+	graph_json, err := json.Marshal(r.workflow.WorkflowGraph)
 	if err != nil {
 		return err
 	}
-	r.statement = content
+	if err := os.WriteFile(path.Join(dir, "workflow", "graph.json"), graph_json, 0644); err != nil {
+		return err
+	}
+	os.Mkdir(path.Join(dir, "data"), os.ModePerm)
+	os.Mkdir(path.Join(dir, "data", "tests"), os.ModePerm)
+	os.Mkdir(path.Join(dir, "data", "subtasks"), os.ModePerm)
+	os.Mkdir(path.Join(dir, "data", "static"), os.ModePerm)
+	os.Mkdir(path.Join(dir, "patch"), os.ModePerm)
+	var tests, subtasks, static table
+	if tests, err = r.exportTable(r.Tests, dir, path.Join("data", "tests")); err != nil {
+		return err
+	}
+	if subtasks, err = r.exportTable(r.Subtasks, dir, path.Join("data", "subtasks")); err != nil {
+		return err
+	}
+	if static, err = r.exportTable(r.Static, dir, path.Join("data", "static")); err != nil {
+		return err
+	}
+	r.Tests = tests
+	r.Subtasks = subtasks
+	r.Static = static
+
+	prob_json, err := json.Marshal(*r)
+	if err != nil {
+		return err
+	}
+	if err := os.WriteFile(path.Join(dir, "problem.json"), prob_json, 0644); err != nil {
+		return err
+	}
+	r.dir = dir
 	return nil
 }
 
-// Create a new datagroup in dir/datagroup/[name]/
-func (r *Problem) NewDataGroup(name string) (*ProbDtgp, error) {
-	if _, ok := r.groups[name]; ok {
-		return nil, fmt.Errorf("datagroup has already existed")
+func (r *Problem) exportTable(tb table, dir, dirtb string) (table, error) {
+	log.Printf("exportTable %s", dirtb)
+	var res table
+	if res_json, err := json.Marshal(tb); err != nil {
+		return tb, err
+	} else {
+		if err := json.Unmarshal(res_json, &res); err != nil {
+			return tb, err
+		}
 	}
-	err := os.Mkdir(path.Join(r.dir.DtgpDir(), name), os.ModePerm)
-	if err != nil {
-		return nil, err
-	}
-	dtgp, err := LoadDtgp(path.Join(r.dir.DtgpDir(), name))
-	if err != nil {
-		return nil, err
-	}
-	r.groups[name] = dtgp
-	return dtgp, nil
-}
 
-// Get a datagroup in dir/datagroup/[name]/, nil if not found
-func (r *Problem) DataGroup(name string) *ProbDtgp {
-	return r.groups[name]
+	// pp.Print(tb)
+	for i, r2 := range res.Record {
+		for k, v := range r2 {
+			if k[0] == '_' { // internal field
+				continue
+			}
+			name := fmt.Sprintf("%s%d%s", k, i, path.Ext(v))
+			if _, err := utils.CopyFile(path.Join(r.dir, v), path.Join(dir, dirtb, name)); err != nil {
+				return tb, err
+			}
+			r2[k] = path.Join(dirtb, name)
+		}
+	}
+	// pp.Print(res, tb)
+	return res, nil
 }
 
 func (r *Problem) SetWkflGraph(serial []byte) error {
@@ -143,122 +109,146 @@ func (r *Problem) SetWkflGraph(serial []byte) error {
 	return nil
 }
 
-// Enumerate all records in all datagroups to generate all testcases.
-func (r *Problem) Testcase() []Testcase {
-	dup := func(m map[string]int) map[string]int {
-		m2 := make(map[string]int)
-		for k, v := range m {
-			m2[k] = v
-		}
-		return m2
-	}
-
-	groups := []map[string]int{{}}
-
-	for name, dtgp := range r.groups {
-		logger.Print(name)
-		pathmap := dtgp.Record(0).PathMap()
-		if pathmap == nil {
-			panic("empty datagroup")
-		}
-		for i := range groups {
-			groups[i][name] = 0
-		}
-
-		cnt := len(groups)
-
-		for i := 1; i < dtgp.Len(); i++ {
-			var more = make([]map[string]int, cnt)
-			for j := 0; j < cnt; j++ {
-				more[j] = dup(groups[j])
-				more[j][name] = i
-			}
-			groups = append(groups, more...)
-		}
-	}
-
-	var testcases []Testcase = make([]Testcase, 0, len(groups))
-	// pp.Print(groups)
-	for _, v := range groups {
-		testcases = append(testcases, Testcase{
-			groups:  v,
-			problem: r,
-		})
-	}
-	return testcases
-}
-
-// Load a problem from dir.
+// load problem from a dir
 func Load(dir string) (*Problem, error) {
-	root := ProbRoot(dir)
-	statement, _ := os.ReadFile(root.StmtMkdn())
-
-	group := map[string]*ProbDtgp{}
-	err := filepath.WalkDir(root.DtgpDir(), func(pathname string, d fs.DirEntry, _ error) error {
-		if pathname == root.DtgpDir() {
-			return nil
-		}
-		if !d.IsDir() {
-			return nil
-		}
-		dtgp, err := LoadDtgp(pathname)
-		if err != nil {
-			return err
-		}
-		group[dtgp.Name()] = dtgp
-		return fs.SkipDir
-	})
+	serial, err := os.ReadFile(path.Join(dir, "problem.json"))
 	if err != nil {
 		return nil, err
 	}
-
-	wkgh, err := workflow.LoadFile(root.WkflGraph())
+	var prob Problem
+	if err := json.Unmarshal(serial, &prob); err != nil {
+		return nil, err
+	}
+	// initialize
+	prob.dir = dir
+	wkgh, err := workflow.LoadFile(path.Join(dir, "workflow", "graph.json"))
 	if err != nil {
 		return nil, err
 	}
-
-	logger.Print("custom analyzer not loaded!")
-
-	prob := Problem{
-		dir:       root,
-		statement: statement,
-		groups:    group,
-		workflow: workflow.Workflow{
-			WorkflowGraph: wkgh,
-			Analyzer:      workflow.DefaultAnalyzer{},
-		},
+	prob.workflow = workflow.Workflow{
+		WorkflowGraph: wkgh,
+		Analyzer:      workflow.DefaultAnalyzer{},
 	}
 	return &prob, nil
 }
 
 // create a new problem in an empty dir
 func New(dir string) (*Problem, error) {
-	root := ProbRoot(dir)
-	if err := os.Mkdir(root.StmtDir(), os.ModePerm); err != nil {
+	var prob = Problem{
+		dir: dir,
+		workflow: workflow.Workflow{
+			WorkflowGraph: &workflow.WorkflowGraph{},
+			Analyzer:      workflow.DefaultAnalyzer{},
+		},
+		Tests:      newTable(),
+		Subtasks:   newTable(),
+		Static:     newTable(),
+		Submission: newTable(),
+	}
+	if err := prob.Export(dir); err != nil {
 		return nil, err
 	}
-	if err := os.Mkdir(root.DtgpDir(), os.ModePerm); err != nil {
-		return nil, err
+	return &prob, nil
+}
+
+func (r *Problem) IsSubtask() bool {
+	return len(r.Subtasks.Field) > 0 && len(r.Subtasks.Record) > 0
+}
+func (r *Problem) toPathMap(rcd record) *map[string]string {
+	res := map[string]string{}
+	for k, v := range rcd {
+		res[k] = path.Join(r.dir, v)
 	}
-	if err := os.Mkdir(root.WkflDir(), os.ModePerm); err != nil {
-		return nil, err
-	}
-	file, err := os.Create(root.StmtMkdn())
-	if err != nil {
-		return nil, err
-	}
-	file.Close()
-	file, err = os.Create(root.WkflGraph())
-	if err != nil {
-		return nil, err
+	return &res
+}
+func (r *Problem) Run(dir string, submission map[string]string) (*Result, error) {
+	// check submission
+	for k := range r.Submission.Field {
+		if _, ok := submission[k]; !ok {
+			return nil, fmt.Errorf("submission missing field %s", k)
+		}
 	}
 
-	if _, err := file.Write((&workflow.WorkflowGraph{
-		Node:    []workflow.Node{},
-		Inbound: map[string]*map[string][]workflow.Inbound{},
-	}).Serialize()); err != nil {
-		return nil, err
+	var inboundPath = map[string]*map[string]string{
+		"submission": (*map[string]string)(&submission),
 	}
-	file.Close()
-	return Load(dir)
+	if len(r.Static.Record) > 0 {
+		inboundPath["static"] = r.toPathMap(r.Static.Record[0])
+	}
+	var result = Result{
+		IsSubtask: r.IsSubtask(),
+		Subtask:   []SubtResult{},
+	}
+	if r.IsSubtask() {
+		for _, r2 := range r.Subtasks.Record {
+			sub_res := SubtResult{
+				Subtaskid: r2["_subtaskid"],
+				Testcase:  []workflow.Result{},
+			}
+			inboundPath["subtask"] = r.toPathMap(r2)
+			for _, r3 := range r.testcaseOf(r2["_subtaskid"]) {
+				inboundPath["testcase"] = r.toPathMap(r3)
+
+				res, err := workflow.Run(r.workflow, dir, inboundPath, r.parseFullscore(r3["_score"], r2["_score"]))
+				if err != nil {
+					return nil, err
+				}
+				sub_res.Testcase = append(sub_res.Testcase, *res)
+			}
+			result.Subtask = append(result.Subtask, sub_res)
+		}
+	} else {
+		sub_res := SubtResult{
+			Testcase: []workflow.Result{},
+		}
+		for _, r3 := range r.Tests.Record {
+			inboundPath["testcase"] = r.toPathMap(r3)
+
+			res, err := workflow.Run(r.workflow, dir, inboundPath, r.parseFullscore(r3["_score"], ""))
+			if err != nil {
+				return nil, err
+			}
+			sub_res.Testcase = append(sub_res.Testcase, *res)
+		}
+		result.Subtask = append(result.Subtask, sub_res)
+	}
+	return &result, nil
+}
+
+func (r *Problem) testcaseOf(subtaskid string) []record {
+	res := []record{}
+	for _, r3 := range r.Tests.Record {
+		if r3["_subtaskid"] == subtaskid {
+			res = append(res, r3)
+		}
+	}
+	return res
+}
+
+func (r *Problem) parseFullscore(test, subtask string) float64 {
+	if test == "average" {
+		return r.Fullscore / float64(len(r.Tests.Record))
+	}
+	if r.IsSubtask() {
+		_, err := strconv.ParseFloat(subtask, 64)
+		if err != nil {
+			panic(err)
+		}
+		return 1 // not important
+	}
+	ftest, err := strconv.ParseFloat(test, 64)
+	if err != nil {
+		panic(err)
+	}
+	return ftest
+
+}
+
+type Result struct {
+	IsSubtask bool
+	Subtask   []SubtResult
+}
+type SubtResult struct {
+	Subtaskid string
+	Testcase  []workflow.Result
 }
