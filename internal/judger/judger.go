@@ -103,7 +103,13 @@ func Judge(options ...OptionProvider) (*Result, error) {
 		return nil, err
 	}
 
-	result := ctxt.RunFork(option.Runner)
+	var result Result
+	switch option.Runner {
+	case General:
+		result = ctxt.RunForkGeneral()
+	default:
+		return nil, fmt.Errorf("invalid runner")
+	}
 	return &result, nil
 }
 

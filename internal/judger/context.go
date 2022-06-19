@@ -175,7 +175,7 @@ func (r context) Run(runner Runner) error {
 	return nil
 }
 
-func (r context) RunFork(runner Runner) Result {
+func (r context) RunForkGeneral() Result {
 	result := C.yjudger_general_fork(r.ctxt)
 	signal := int(result.signal)
 	exitCode := int(result.exit_code)
