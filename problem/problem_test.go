@@ -18,14 +18,21 @@ func TestNew(t *testing.T) {
 	}
 
 	script.Echo("1 2").WriteFile(path.Join(dir, "a.in"))
-	script.Echo("3").WriteFile(path.Join(dir, "a.ans"))
+	script.Echo("-1093908432").WriteFile(path.Join(dir, "a.ans"))
 	script.Echo(`
 #include<iostream>
 using namespace std;
-int main () { int a, b; cin >> a >> b; cout << a + b << endl; return 0; }
+
+int main () { 
+  int a, b; 
+  cin >> a >> b;
+  for(int i = 0; i < 100000000; i++) a += b, b += a;
+  cout << a + b << endl;
+  return 0;
+}
 	`).WriteFile(path.Join(dir, "src.cpp"))
 	script.Echo("1000 1000 204857600 204857600 204857600 204857600 10").WriteFile(path.Join(dir, "cpl.txt"))
-	script.Echo("#!/bin/env bash\nclang++ $1 -o $2 -O2").WriteFile(path.Join(dir, "script.sh"))
+	script.Echo("#!/bin/env bash\nclang++ $1 -o $2").WriteFile(path.Join(dir, "script.sh"))
 
 	prob.Fullscore = 100
 	prob.Tests.Fields().Add("input")
