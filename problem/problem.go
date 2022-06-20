@@ -151,6 +151,7 @@ func New(dir string) (*Problem, error) {
 	return &prob, nil
 }
 
+// Whether subtask is enabled.
 func (r *Problem) IsSubtask() bool {
 	return len(r.Subtasks.Field) > 0 && len(r.Subtasks.Record) > 0
 }
@@ -161,6 +162,8 @@ func (r *Problem) toPathMap(rcd record) *map[string]string {
 	}
 	return &res
 }
+
+// Run all testcase in the dir.
 func (r *Problem) Run(dir string, submission map[string]string) (*Result, error) {
 	// check submission
 	for k := range r.Submission.Field {
@@ -180,16 +183,20 @@ func (r *Problem) Run(dir string, submission map[string]string) (*Result, error)
 		Subtask:   []SubtResult{},
 	}
 	if r.IsSubtask() {
-		for _, r2 := range r.Subtasks.Record {
+		for _, subtask := range r.Subtasks.Record {
 			sub_res := SubtResult{
-				Subtaskid: r2["_subtaskid"],
+				Subtaskid: subtask["_subtaskid"],
 				Testcase:  []workflow.Result{},
 			}
-			inboundPath["subtask"] = r.toPathMap(r2)
-			for _, r3 := range r.testcaseOf(r2["_subtaskid"]) {
-				inboundPath["testcase"] = r.toPathMap(r3)
-
-				res, err := workflow.Run(r.workflow, dir, inboundPath, r.parseFullscore(r3["_score"], r2["_score"]))
+			inboundPath["subtask"] = r.toPathMap(subtask)
+			tests := r.testcaseOf(subtask["_subtaskid"])
+			score, err := strconv.ParseFloat(subtask["_score"], 64)
+			if err != nil {
+				return nil, err
+			}
+			for _, test := range tests {
+				inboundPath["testcase"] = r.toPathMap(test)
+				res, err := workflow.Run(r.workflow, dir, inboundPath, score/float64(len(tests)))
 				if err != nil {
 					return nil, err
 				}
@@ -201,10 +208,14 @@ func (r *Problem) Run(dir string, submission map[string]string) (*Result, error)
 		sub_res := SubtResult{
 			Testcase: []workflow.Result{},
 		}
-		for _, r3 := range r.Tests.Record {
-			inboundPath["testcase"] = r.toPathMap(r3)
+		for _, test := range r.Tests.Record {
+			inboundPath["testcase"] = r.toPathMap(test)
 
-			res, err := workflow.Run(r.workflow, dir, inboundPath, r.parseFullscore(r3["_score"], ""))
+			score := r.Fullscore / float64(len(r.Tests.Record))
+			if f, err := strconv.ParseFloat(test["_score"], 64); err == nil {
+				score = f
+			}
+			res, err := workflow.Run(r.workflow, dir, inboundPath, score)
 			if err != nil {
 				return nil, err
 			}
@@ -217,31 +228,12 @@ func (r *Problem) Run(dir string, submission map[string]string) (*Result, error)
 
 func (r *Problem) testcaseOf(subtaskid string) []record {
 	res := []record{}
-	for _, r3 := range r.Tests.Record {
-		if r3["_subtaskid"] == subtaskid {
-			res = append(res, r3)
+	for _, test := range r.Tests.Record {
+		if test["_subtaskid"] == subtaskid {
+			res = append(res, test)
 		}
 	}
 	return res
-}
-
-func (r *Problem) parseFullscore(test, subtask string) float64 {
-	if test == "average" {
-		return r.Fullscore / float64(len(r.Tests.Record))
-	}
-	if r.IsSubtask() {
-		_, err := strconv.ParseFloat(subtask, 64)
-		if err != nil {
-			panic(err)
-		}
-		return 1 // not important
-	}
-	ftest, err := strconv.ParseFloat(test, 64)
-	if err != nil {
-		panic(err)
-	}
-	return ftest
-
 }
 
 type Result struct {
