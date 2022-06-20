@@ -2,11 +2,11 @@ package processor
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"strings"
 
 	"github.com/sshwy/yaoj-core/internal/judger"
+	"github.com/sshwy/yaoj-core/utils"
 )
 
 // Run a program reading from file and print to file and stderr.
@@ -39,7 +39,7 @@ func (r RunnerFileio) Run(input []string, output []string) *judger.Result {
 	}
 	var inf, ouf string
 	fmt.Sscanf(lines[1], "%s%s", &inf, &ouf)
-	if _, err := copyFile(input[1], inf); err != nil {
+	if _, err := utils.CopyFile(input[1], inf); err != nil {
 		return &judger.Result{
 			Code: judger.RuntimeError,
 			Msg:  "copy: " + err.Error(),
@@ -66,36 +66,8 @@ func (r RunnerFileio) Run(input []string, output []string) *judger.Result {
 			Msg:  err.Error(),
 		}
 	}
-	copyFile(ouf, output[0])
+	utils.CopyFile(ouf, output[0])
 	return res
 }
 
 var _ Processor = RunnerFileio{}
-
-func copyFile(src, dst string) (int64, error) {
-	if src == dst {
-		return 0, fmt.Errorf("same path")
-	}
-	sourceFileStat, err := os.Stat(src)
-	if err != nil {
-		return 0, err
-	}
-
-	if !sourceFileStat.Mode().IsRegular() {
-		return 0, fmt.Errorf("%s is not a regular file", src)
-	}
-
-	source, err := os.Open(src)
-	if err != nil {
-		return 0, err
-	}
-	defer source.Close()
-
-	destination, err := os.Create(dst)
-	if err != nil {
-		return 0, err
-	}
-	defer destination.Close()
-	nBytes, err := io.Copy(destination, source)
-	return nBytes, err
-}

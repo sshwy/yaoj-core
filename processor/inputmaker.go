@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/sshwy/yaoj-core/internal/judger"
+	"github.com/sshwy/yaoj-core/utils"
 )
 
 // Inputmaker make input according to "option": "raw" means "source" provides
@@ -28,7 +29,7 @@ func (r Inputmaker) Run(input []string, output []string) *judger.Result {
 		}
 	}
 	if strings.Contains(string(option), "raw") {
-		if _, err := copyFile(input[0], output[0]); err != nil {
+		if _, err := utils.CopyFile(input[0], output[0]); err != nil {
 			return &judger.Result{
 				Code: judger.RuntimeError,
 				Msg:  "copy: " + err.Error(),
