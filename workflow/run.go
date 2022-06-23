@@ -45,6 +45,7 @@ func (r *RuntimeNode) inputFullfilled() bool {
 	return true
 }
 
+// SHA256 hash for file content.
 // for any error, return empty hash
 func fileHash(name string) sha {
 	hash := sha256.New()
@@ -88,11 +89,12 @@ func (r *RuntimeNode) outputHash() (res []sha) {
 	if r.hash == (sha{}) {
 		r.calcHash()
 	}
-	hash := sha256.New()
-	hash.Write(r.hash[:])
-	res = make([]sha, len(r.Output))
 	_, labels := r.Processor().Label()
+	res = make([]sha, len(r.Output))
+	hash := sha256.New()
 	for i, label := range labels {
+		hash.Reset()
+		hash.Write(r.hash[:])
 		hash.Write([]byte(label))
 		res[i] = *(*sha)(hash.Sum(nil))
 	}
@@ -161,8 +163,15 @@ func Run(w Workflow, dir string, inboundPath map[string]*map[string]string, full
 		return nil, fmt.Errorf("invalid inboundPath: missing field")
 	}
 	for i, group := range w.Inbound {
+		if group == nil {
+			return nil, fmt.Errorf("w.Inbound[%s] == nil", i)
+		}
+		data := inboundPath[i]
+		if data == nil {
+			return nil, fmt.Errorf("inboundPath[%s] == nil", i)
+		}
 		for j, bounds := range *group {
-			if _, ok := (*inboundPath[i])[j]; !ok {
+			if _, ok := (*data)[j]; !ok {
 				return nil, fmt.Errorf("invalid inboundPath: missing field %s %s", i, j)
 			}
 			for _, bound := range bounds {
@@ -176,7 +185,7 @@ func Run(w Workflow, dir string, inboundPath map[string]*map[string]string, full
 		if !node.inputFullfilled() {
 			return fmt.Errorf("input not fullfilled")
 		}
-		// node.calcHash()
+		node.calcHash()
 		// log.Print(node.outputHash())
 		// log.Printf("%d, %v", id, node.hash)
 		for i := 0; i < len(node.Output); i++ {
