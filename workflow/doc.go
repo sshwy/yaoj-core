@@ -20,5 +20,9 @@ Analyzer
 An analyzer examines up all nodes' execution result and all generated files to
 evaluate the whole process, and then returns the structured result.
 
+Builder
+
+Builder provides convenient ways to create a workflow graph.
+
 */
 package workflow

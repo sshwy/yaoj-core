@@ -37,7 +37,7 @@ type Node struct {
 }
 
 // Get the processor of the node.
-func (r *Node) Processor() processor.Processor {
+func (r Node) Processor() processor.Processor {
 	return processor.Get(r.ProcName)
 }
 

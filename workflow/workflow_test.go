@@ -8,65 +8,27 @@ import (
 )
 
 func TestWorkflow(t *testing.T) {
+	var b workflow.Builder
+	b.SetNode("compile", "compiler", false)
+	b.SetNode("run", "runner:stdio", true)
+	b.SetNode("check", "checker:hcmp", false)
+	b.AddInbound("submission", "source", "compile", "source")
+	b.AddInbound("static", "compilescript", "compile", "script")
+	b.AddInbound("static", "limitation", "run", "limit")
+	b.AddInbound("testcase", "input", "run", "stdin")
+	b.AddInbound("testcase", "answer", "check", "ans")
+	b.AddEdge("compile", "result", "run", "executable")
+	b.AddEdge("run", "stdout", "check", "out")
+	graph, err := b.WorkflowGraph()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	pp.Print(graph)
+
 	w := workflow.Workflow{
-		WorkflowGraph: &workflow.WorkflowGraph{
-			Edge: []workflow.Edge{
-				{
-					From: workflow.Outbound{
-						Name:       "compile",
-						LabelIndex: 0, // result
-					},
-					To: workflow.Inbound{
-						Name:       "run",
-						LabelIndex: 0, // executable
-					},
-				},
-				{
-					From: workflow.Outbound{
-						Name:       "run",
-						LabelIndex: 0, // stdout
-					},
-					To: workflow.Inbound{
-						Name:       "check",
-						LabelIndex: 0, // out
-					},
-				},
-			},
-			Node: map[string]workflow.Node{
-				"check":   {ProcName: "checker:hcmp"},
-				"run":     {ProcName: "runner:stdio", Key: true},
-				"compile": {ProcName: "compiler"},
-			},
-			Inbound: map[string]*map[string][]workflow.Inbound{
-				"testcase": {
-					"input": {{
-						Name:       "run",
-						LabelIndex: 1, // stdin
-					}},
-					"answer": {{
-						Name:       "check",
-						LabelIndex: 1, // ans
-					}},
-				},
-				"option": {
-					"limitation": {{
-						Name:       "run",
-						LabelIndex: 2, // limit
-					}},
-					"compilescript": {{
-						Name:       "compile",
-						LabelIndex: 1, // script
-					}},
-				},
-				"submission": {
-					"source": {{
-						Name:       "compile",
-						LabelIndex: 0, // source
-					}},
-				},
-			},
-		},
-		Analyzer: workflow.DefaultAnalyzer{},
+		WorkflowGraph: graph,
+		Analyzer:      workflow.DefaultAnalyzer{},
 	}
 	dir := t.TempDir()
 	res, err := workflow.Run(w, dir, map[string]*map[string]string{
@@ -74,7 +36,7 @@ func TestWorkflow(t *testing.T) {
 			"input":  "testdata/main.in",
 			"answer": "testdata/main.ans",
 		},
-		"option": {
+		"static": {
 			"limitation":    "testdata/main.lim",
 			"compilescript": "testdata/script.sh",
 		},
