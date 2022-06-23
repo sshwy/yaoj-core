@@ -4,35 +4,8 @@ import (
 	"testing"
 
 	"github.com/k0kubun/pp/v3"
-	"github.com/sshwy/yaoj-core/internal/judger"
 	"github.com/sshwy/yaoj-core/workflow"
 )
-
-type testanalyzer struct {
-}
-
-func (r testanalyzer) Analyze(nodes []workflow.RuntimeNode, score float64) workflow.Result {
-	display := []workflow.ResultFileDisplay{
-		workflow.FileDisplay(nodes[1].Output[0], "output", 50),
-		workflow.FileDisplay(nodes[1].Output[1], "error", 50),
-	}
-	if nodes[2].Result.Code == judger.Ok {
-		return workflow.Result{
-			ResultMeta: workflow.ResultMeta{
-				Fullscore: score,
-				Score:     score,
-			},
-			File: display,
-		}
-	}
-	return workflow.Result{
-		ResultMeta: workflow.ResultMeta{
-			Fullscore: score,
-			Score:     0,
-		},
-		File: display,
-	}
-}
 
 func TestWorkflow(t *testing.T) {
 	w := workflow.Workflow{
@@ -40,60 +13,60 @@ func TestWorkflow(t *testing.T) {
 			Edge: []workflow.Edge{
 				{
 					From: workflow.Outbound{
-						Index:      0, // compiler
+						Name:       "compile",
 						LabelIndex: 0, // result
 					},
 					To: workflow.Inbound{
-						Index:      1, // runner
+						Name:       "run",
 						LabelIndex: 0, // executable
 					},
 				},
 				{
 					From: workflow.Outbound{
-						Index:      1, // runner
+						Name:       "run",
 						LabelIndex: 0, // stdout
 					},
 					To: workflow.Inbound{
-						Index:      2, // checker
+						Name:       "check",
 						LabelIndex: 0, // out
 					},
 				},
 			},
-			Node: []workflow.Node{
-				{ProcName: "compiler"},
-				{ProcName: "runner:stdio"},
-				{ProcName: "checker:hcmp"},
+			Node: map[string]workflow.Node{
+				"check":   {ProcName: "checker:hcmp"},
+				"run":     {ProcName: "runner:stdio", Key: true},
+				"compile": {ProcName: "compiler"},
 			},
 			Inbound: map[string]*map[string][]workflow.Inbound{
 				"testcase": {
 					"input": {{
-						Index:      1, // runner:stdio
+						Name:       "run",
 						LabelIndex: 1, // stdin
 					}},
 					"answer": {{
-						Index:      2, // checker
+						Name:       "check",
 						LabelIndex: 1, // ans
 					}},
 				},
 				"option": {
 					"limitation": {{
-						Index:      1, // runner:stdio
+						Name:       "run",
 						LabelIndex: 2, // limit
 					}},
 					"compilescript": {{
-						Index:      0, // compiler
+						Name:       "compile",
 						LabelIndex: 1, // script
 					}},
 				},
 				"submission": {
 					"source": {{
-						Index:      0, // compiler
+						Name:       "compile",
 						LabelIndex: 0, // source
 					}},
 				},
 			},
 		},
-		Analyzer: testanalyzer{},
+		Analyzer: workflow.DefaultAnalyzer{},
 	}
 	dir := t.TempDir()
 	res, err := workflow.Run(w, dir, map[string]*map[string]string{

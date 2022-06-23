@@ -10,7 +10,7 @@ import (
 
 // Analyzer generates result of a workflow.
 type Analyzer interface {
-	Analyze(nodes []RuntimeNode, fullscore float64) Result
+	Analyze(nodes map[string]RuntimeNode, fullscore float64) Result
 }
 
 func LoadAnalyzer(plugin string) (Analyzer, error) {
@@ -34,7 +34,7 @@ func LoadAnalyzer(plugin string) (Analyzer, error) {
 type DefaultAnalyzer struct {
 }
 
-func (r DefaultAnalyzer) Analyze(nodes []RuntimeNode, fullscore float64) Result {
+func (r DefaultAnalyzer) Analyze(nodes map[string]RuntimeNode, fullscore float64) Result {
 	res := Result{
 		ResultMeta: ResultMeta{
 			Score:     fullscore,
@@ -57,7 +57,7 @@ func (r DefaultAnalyzer) Analyze(nodes []RuntimeNode, fullscore float64) Result 
 				File: []ResultFileDisplay{
 					{
 						Title:   "Error Node",
-						Content: fmt.Sprintf("id=%d, proc=%s, Code=%v %s", i, node.ProcName, node.Result.Code, nodes[0].Output[1]),
+						Content: fmt.Sprintf("name=%s, proc=%s, Code=%v", i, node.ProcName, node.Result.Code),
 					},
 				},
 			}

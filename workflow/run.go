@@ -99,20 +99,64 @@ func (r *RuntimeNode) outputHash() (res []sha) {
 	return
 }
 
+func runtimeNodes(node map[string]Node) (res map[string]RuntimeNode) {
+	res = map[string]RuntimeNode{}
+	for k, v := range node {
+		inLabel, ouLabel := v.Processor().Label()
+		res[k] = RuntimeNode{
+			Node:   v,
+			Input:  make([]string, len(inLabel)),
+			Output: make([]string, len(ouLabel)),
+		}
+	}
+	return
+}
+
+func topologicalEnum(w Workflow, handler func(id string) error) error {
+	indegree := map[string]int{}
+	for _, edge := range w.Edge {
+		indegree[edge.To.Name]++
+	}
+	for {
+		flag := false
+		p := ""
+		for id := range w.Node {
+			if indegree[id] == 0 {
+				flag = true
+				p = id
+				break
+			}
+		}
+		if !flag {
+			break
+		}
+		logger.Printf("topo current id=%s", p)
+		indegree[p] = -1
+		for _, edge := range w.EdgeFrom(p) {
+			indegree[edge.To.Name]--
+		}
+		err := handler(p)
+		if err != nil {
+			return err
+		}
+	}
+	for id := range w.Node {
+		if indegree[id] != -1 {
+			return fmt.Errorf("invalid DAG! id=%s", id)
+		}
+	}
+	return nil
+}
+
 // perform a workflow in a directory.
 // inboundPath: map[datagroup_name]*map[field]filename
 func Run(w Workflow, dir string, inboundPath map[string]*map[string]string, fullscore float64) (*Result, error) {
 	if err := w.Valid(); err != nil {
 		return nil, fmt.Errorf("workflow validation: %s", err.Error())
 	}
-	nodes := utils.Map(w.Node, func(node Node) RuntimeNode {
-		inLabel, ouLabel := node.Processor().Label()
-		return RuntimeNode{
-			Node:   node,
-			Input:  make([]string, len(inLabel)),
-			Output: make([]string, len(ouLabel)),
-		}
-	})
+
+	nodes := runtimeNodes(w.Node)
+
 	if len(w.Inbound) != len(inboundPath) {
 		return nil, fmt.Errorf("invalid inboundPath: missing field")
 	}
@@ -122,14 +166,15 @@ func Run(w Workflow, dir string, inboundPath map[string]*map[string]string, full
 				return nil, fmt.Errorf("invalid inboundPath: missing field %s %s", i, j)
 			}
 			for _, bound := range bounds {
-				nodes[bound.Index].Input[bound.LabelIndex] = (*inboundPath[i])[j]
+				nodes[bound.Name].Input[bound.LabelIndex] = (*inboundPath[i])[j]
 			}
 		}
 	}
 
-	for id, node := range nodes {
+	err := topologicalEnum(w, func(id string) error {
+		node := nodes[id]
 		if !node.inputFullfilled() {
-			panic(fmt.Errorf("input not fullfilled"))
+			return fmt.Errorf("input not fullfilled")
 		}
 		// node.calcHash()
 		// log.Print(node.outputHash())
@@ -138,11 +183,19 @@ func Run(w Workflow, dir string, inboundPath map[string]*map[string]string, full
 			node.Output[i] = path.Join(dir, utils.RandomString(10))
 		}
 		for _, edge := range w.EdgeFrom(id) {
-			nodes[edge.To.Index].Input[edge.To.LabelIndex] = nodes[edge.From.Index].Output[edge.From.LabelIndex]
+			nodes[edge.To.Name].Input[edge.To.LabelIndex] = nodes[edge.From.Name].Output[edge.From.LabelIndex]
 		}
-		logger.Printf("run node[%d]: input %+v output %+v", id, node.Input, node.Output)
+		logger.Printf("run node[%s]:", id)
+		logger.Printf("input %+v", node.Input)
+		logger.Printf("output %+v", node.Output)
 		result := node.Processor().Run(node.Input, node.Output)
-		nodes[id].Result = result
+		nd := nodes[id]
+		nd.Result = result
+		nodes[id] = nd
+		return nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := w.Analyze(nodes, fullscore)

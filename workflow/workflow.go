@@ -18,8 +18,8 @@ type DtgpBound struct {
 }
 
 type Bound struct {
-	// index of the node in the array
-	Index int
+	// name of the node
+	Name string
 	// index of the file in input (output) array
 	LabelIndex int
 }
@@ -49,7 +49,7 @@ func (r *Node) Processor() processor.Processor {
 
 type WorkflowGraph struct {
 	// a node itself is just a processor
-	Node []Node
+	Node map[string]Node
 	Edge []Edge
 	// inbound consists a series of data group.
 	// Inbound: map[datagroup_name]*map[field]Bound
@@ -66,10 +66,10 @@ func (r *WorkflowGraph) Serialize() []byte {
 }
 
 // All edges starting from Node[nodeid]
-func (r *WorkflowGraph) EdgeFrom(nodeid int) []Edge {
+func (r *WorkflowGraph) EdgeFrom(name string) []Edge {
 	res := []Edge{}
 	for _, edge := range r.Edge {
-		if edge.From.Index == nodeid {
+		if edge.From.Name == name {
 			res = append(res, edge)
 		}
 	}
@@ -77,10 +77,10 @@ func (r *WorkflowGraph) EdgeFrom(nodeid int) []Edge {
 }
 
 // All edges ending at Node[nodeid]
-func (r *WorkflowGraph) EdgeTo(nodeid int) []Edge {
+func (r *WorkflowGraph) EdgeTo(name string) []Edge {
 	res := []Edge{}
 	for _, edge := range r.Edge {
-		if edge.To.Index == nodeid {
+		if edge.To.Name == name {
 			res = append(res, edge)
 		}
 	}
@@ -92,27 +92,14 @@ func (r *WorkflowGraph) Valid() error {
 	for i, node := range r.Node {
 		proc := node.Processor()
 		if proc == nil {
-			return fmt.Errorf("node[%d] has invalid processor name (%s)", i, node.ProcName)
-		}
-		for _, edge := range r.EdgeTo(i) {
-			if edge.From.Index >= i || edge.From.Index < 0 {
-				return fmt.Errorf("invalid Edge %+v", edge)
-			}
-		}
-		for _, edge := range r.EdgeFrom(i) {
-			if edge.To.Index <= i || edge.To.Index >= len(r.Node) {
-				return fmt.Errorf("invalid Edge %+v", edge)
-			}
+			return fmt.Errorf("node[%s] has invalid processor name (%s)", i, node.ProcName)
 		}
 	}
 	for i, group := range r.Inbound {
 		for j, bounds := range *group {
 			for _, bound := range bounds {
-				node := r.Node[bound.Index]
+				node := r.Node[bound.Name]
 				inLabel, _ := node.Processor().Label()
-				if bound.Index >= len(r.Node) || bound.Index < 0 {
-					return fmt.Errorf("inbound[%s][%s] has invalid node index %d", i, j, bound.Index)
-				}
 				if bound.LabelIndex >= len(inLabel) {
 					return fmt.Errorf("inbound[%s][%s] has invalid node label index %d", i, j, bound.LabelIndex)
 				}
@@ -190,5 +177,13 @@ func FileDisplay(path string, title string, len int) ResultFileDisplay {
 	return ResultFileDisplay{
 		Title:   title,
 		Content: content,
+	}
+}
+
+func NewGraph() WorkflowGraph {
+	return WorkflowGraph{
+		Node:    map[string]Node{},
+		Edge:    []Edge{},
+		Inbound: map[string]*map[string][]Inbound{},
 	}
 }
