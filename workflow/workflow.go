@@ -11,12 +11,6 @@ import (
 	"github.com/sshwy/yaoj-core/utils"
 )
 
-// Datagroup bound.
-type DtgpBound struct {
-	Group string
-	Field string
-}
-
 type Bound struct {
 	// name of the node
 	Name string
