@@ -76,74 +76,74 @@ int main () {
 	// net adjuestment
 	err = prob.SetWkflGraph([]byte(`
 {
-    "Node": [
-        {
+    "Node": {
+        "check": {
+            "ProcName": "checker:hcmp"
+        },
+        "compile": {
             "ProcName": "compiler"
         },
-        {
+        "run": {
             "ProcName": "runner:stdio",
-			"Key": true
-        },
-        {
-            "ProcName": "checker:hcmp"
+            "Key": true
         }
-    ],
+    },
     "Edge": [
         {
             "From": {
-                "Index": 1,
+                "Name": "compile",
                 "LabelIndex": 0
             },
             "To": {
-                "Index": 2,
+                "Name": "run",
                 "LabelIndex": 0
             }
         },
         {
             "From": {
-                "Index": 0,
+                "Name": "run",
                 "LabelIndex": 0
             },
             "To": {
-                "Index": 1,
+                "Name": "check",
                 "LabelIndex": 0
             }
         }
     ],
     "Inbound": {
-        "testcase": {
-            "input": [
-                {
-                    "Index": 1,
-                    "LabelIndex": 1
-                }
-            ],
-            "answer": [
-                {
-                    "Index": 2,
-                    "LabelIndex": 1
-                }
-            ]
-        },
         "static": {
-            "limitation": [
-                {
-                    "Index": 1,
-                    "LabelIndex": 2
-                }
-            ],
             "compilescript": [
                 {
-                    "Index": 0,
+                    "Name": "compile",
                     "LabelIndex": 1
+                }
+            ],
+            "limitation": [
+                {
+                    "Name": "run",
+                    "LabelIndex": 2
                 }
             ]
         },
         "submission": {
             "source": [
                 {
-                    "Index": 0,
+                    "Name": "compile",
                     "LabelIndex": 0
+                }
+            ]
+        },
+        "testcase": {
+            "answer": [
+                {
+                    "Name": "check",
+                    "LabelIndex": 1
+                }
+            ],
+            "input": [
+                {
+                    "Name": "run",
+                    "LabelIndex": 1
                 }
             ]
         }

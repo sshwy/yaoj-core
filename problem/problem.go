@@ -16,11 +16,13 @@ type Problem struct {
 	Fullscore float64
 	dir       string
 	workflow  workflow.Workflow
-	// _subtaskid, _score ("average", {number})
+	// "testcase" _subtaskid, _score ("average", {number})
 	Tests table
-	// _subtaskid, _score
-	Subtasks   table
-	Static     table
+	// "subtask" _subtaskid, _score
+	Subtasks table
+	// "static"
+	Static table
+	// "submission"
 	Submission table
 }
 
@@ -165,6 +167,7 @@ func (r *Problem) toPathMap(rcd record) *map[string]string {
 
 // Run all testcase in the dir.
 func (r *Problem) Run(dir string, submission map[string]string) (*Result, error) {
+	logger.Printf("run dir=%s", dir)
 	// check submission
 	for k := range r.Submission.Field {
 		if _, ok := submission[k]; !ok {
@@ -244,3 +247,5 @@ type SubtResult struct {
 	Subtaskid string
 	Testcase  []workflow.Result
 }
+
+var logger = log.New(os.Stderr, "[problem] ", log.LstdFlags|log.Lshortfile|log.Lmsgprefix)
