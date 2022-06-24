@@ -6,6 +6,9 @@ import (
 	"os"
 	"sync"
 	"time"
+
+	"github.com/sshwy/yaoj-core/pkg/processor"
+	"github.com/sshwy/yaoj-core/pkg/utils"
 )
 
 var logger = log.New(os.Stderr, "[judger] ", log.LstdFlags|log.Lshortfile|log.Lmsgprefix)
@@ -60,6 +63,17 @@ func (r Result) String() string {
 	}
 	return fmt.Sprintf("%d{Code: %d, Signal: %s, RealTime: %v, CpuTime: %v, Memory: %v, ErrorMsg: \"%s\"}",
 		r.Code, r.Code, signal, r.RealTime, r.CpuTime, r.Memory, r.Msg)
+}
+
+func (r *Result) ProcResult() *processor.Result {
+	res := processor.Result{
+		Code:     processor.Code(r.Code),
+		RealTime: r.RealTime,
+		CpuTime:  r.CpuTime,
+		Memory:   (*utils.ByteValue)(r.Memory),
+		Msg:      r.Msg,
+	}
+	return &res
 }
 
 var judgeSync sync.Mutex

@@ -1,4 +1,4 @@
-package processor
+package processors
 
 import (
 	"os"
@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/sshwy/yaoj-core/pkg/internal/judger"
+	"github.com/sshwy/yaoj-core/pkg/processor"
 )
 
 // Execute testlib generator.
@@ -18,11 +19,11 @@ type GeneratorTestlib struct {
 func (r GeneratorTestlib) Label() (inputlabel []string, outputlabel []string) {
 	return []string{"generator", "arguments"}, []string{"output", "stderr", "judgerlog"}
 }
-func (r GeneratorTestlib) Run(input []string, output []string) *judger.Result {
+func (r GeneratorTestlib) Run(input []string, output []string) *Result {
 	args, err := os.ReadFile(input[1])
 	if err != nil {
-		return &judger.Result{
-			Code: judger.RuntimeError,
+		return &Result{
+			Code: processor.RuntimeError,
 			Msg:  "open arguments: " + err.Error(),
 		}
 	}
@@ -42,12 +43,12 @@ func (r GeneratorTestlib) Run(input []string, output []string) *judger.Result {
 		judger.WithOutput(10*judger.MB),
 	)
 	if err != nil {
-		return &judger.Result{
-			Code: judger.SystemError,
+		return &Result{
+			Code: processor.SystemError,
 			Msg:  err.Error(),
 		}
 	}
-	return res
+	return res.ProcResult()
 }
 
 var _ Processor = GeneratorTestlib{}

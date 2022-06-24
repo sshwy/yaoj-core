@@ -1,10 +1,11 @@
-package processor
+package processors
 
 import (
 	"os"
 	"time"
 
 	"github.com/sshwy/yaoj-core/pkg/internal/judger"
+	"github.com/sshwy/yaoj-core/pkg/processor"
 )
 
 // Compile source file in all language.
@@ -19,10 +20,10 @@ func (r Compiler) Label() (inputlabel []string, outputlabel []string) {
 	return []string{"source", "script"}, []string{"result", "log", "judgerlog"}
 }
 
-func (r Compiler) Run(input []string, output []string) *judger.Result {
+func (r Compiler) Run(input []string, output []string) *Result {
 	if err := os.Chmod(input[1], 0744); err != nil { // -rwxr--r--
-		return &judger.Result{
-			Code: judger.RuntimeError,
+		return &Result{
+			Code: processor.RuntimeError,
 			Msg:  "open script: " + err.Error(),
 		}
 	}
@@ -36,12 +37,12 @@ func (r Compiler) Run(input []string, output []string) *judger.Result {
 		judger.WithOutput(10*judger.MB),
 	)
 	if err != nil {
-		return &judger.Result{
-			Code: judger.SystemError,
+		return &Result{
+			Code: processor.SystemError,
 			Msg:  err.Error(),
 		}
 	}
-	return res
+	return res.ProcResult()
 }
 
 var _ Processor = Compiler{}

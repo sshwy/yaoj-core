@@ -4,7 +4,7 @@ import (
 	"fmt"
 	goPlugin "plugin"
 
-	"github.com/sshwy/yaoj-core/pkg/internal/judger"
+	"github.com/sshwy/yaoj-core/pkg/processor"
 	"github.com/sshwy/yaoj-core/pkg/utils"
 )
 
@@ -47,7 +47,7 @@ func (r DefaultAnalyzer) Analyze(nodes map[string]RuntimeNode, fullscore float64
 		if node.Result == nil {
 			continue
 		}
-		if node.Result.Code != judger.Ok {
+		if node.Result.Code != processor.Ok {
 			return Result{
 				ResultMeta: ResultMeta{
 					Score:     0,

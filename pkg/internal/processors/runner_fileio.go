@@ -1,4 +1,4 @@
-package processor
+package processors
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/sshwy/yaoj-core/pkg/internal/judger"
+	"github.com/sshwy/yaoj-core/pkg/processor"
 	"github.com/sshwy/yaoj-core/pkg/utils"
 )
 
@@ -22,26 +23,26 @@ func (r RunnerFileio) Label() (inputlabel []string, outputlabel []string) {
 	return []string{"executable", "fin", "config"}, []string{"fout", "stderr", "judgerlog"}
 }
 
-func (r RunnerFileio) Run(input []string, output []string) *judger.Result {
+func (r RunnerFileio) Run(input []string, output []string) *Result {
 	lim, err := os.ReadFile(input[2])
 	if err != nil {
-		return &judger.Result{
-			Code: judger.RuntimeError,
+		return &Result{
+			Code: processor.RuntimeError,
 			Msg:  "open config: " + err.Error(),
 		}
 	}
 	lines := strings.Split(string(lim), "\n")
 	if len(lines) != 2 {
-		return &judger.Result{
-			Code: judger.RuntimeError,
+		return &Result{
+			Code: processor.RuntimeError,
 			Msg:  "invalid config",
 		}
 	}
 	var inf, ouf string
 	fmt.Sscanf(lines[1], "%s%s", &inf, &ouf)
 	if _, err := utils.CopyFile(input[1], inf); err != nil {
-		return &judger.Result{
-			Code: judger.RuntimeError,
+		return &Result{
+			Code: processor.RuntimeError,
 			Msg:  "copy: " + err.Error(),
 		}
 	}
@@ -53,21 +54,21 @@ func (r RunnerFileio) Run(input []string, output []string) *judger.Result {
 	}
 	more, err := parseJudgerLimit(lines[0])
 	if err != nil {
-		return &judger.Result{
-			Code: judger.RuntimeError,
+		return &Result{
+			Code: processor.RuntimeError,
 			Msg:  "parse judger limit: " + err.Error(),
 		}
 	}
 	options = append(options, more...)
 	res, err := judger.Judge(options...)
 	if err != nil {
-		return &judger.Result{
-			Code: judger.SystemError,
+		return &Result{
+			Code: processor.SystemError,
 			Msg:  err.Error(),
 		}
 	}
 	utils.CopyFile(ouf, output[0])
-	return res
+	return res.ProcResult()
 }
 
 var _ Processor = RunnerFileio{}

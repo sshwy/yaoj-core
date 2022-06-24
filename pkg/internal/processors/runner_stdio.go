@@ -1,9 +1,10 @@
-package processor
+package processors
 
 import (
 	"os"
 
 	"github.com/sshwy/yaoj-core/pkg/internal/judger"
+	"github.com/sshwy/yaoj-core/pkg/processor"
 )
 
 // Run a program reading from stdin and print to stdout and stderr.
@@ -18,11 +19,11 @@ type RunnerStdio struct {
 func (r RunnerStdio) Label() (inputlabel []string, outputlabel []string) {
 	return []string{"executable", "stdin", "limit"}, []string{"stdout", "stderr", "judgerlog"}
 }
-func (r RunnerStdio) Run(input []string, output []string) *judger.Result {
+func (r RunnerStdio) Run(input []string, output []string) *Result {
 	lim, err := os.ReadFile(input[2])
 	if err != nil {
-		return &judger.Result{
-			Code: judger.RuntimeError,
+		return &Result{
+			Code: processor.RuntimeError,
 			Msg:  "open limit: " + err.Error(),
 		}
 	}
@@ -34,20 +35,20 @@ func (r RunnerStdio) Run(input []string, output []string) *judger.Result {
 	}
 	more, err := parseJudgerLimit(string(lim))
 	if err != nil {
-		return &judger.Result{
-			Code: judger.RuntimeError,
+		return &Result{
+			Code: processor.RuntimeError,
 			Msg:  "parse judger limit: " + err.Error(),
 		}
 	}
 	options = append(options, more...)
 	res, err := judger.Judge(options...)
 	if err != nil {
-		return &judger.Result{
-			Code: judger.SystemError,
+		return &Result{
+			Code: processor.SystemError,
 			Msg:  err.Error(),
 		}
 	}
-	return res
+	return res.ProcResult()
 }
 
 var _ Processor = RunnerStdio{}

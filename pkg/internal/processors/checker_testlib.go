@@ -1,9 +1,10 @@
-package processor
+package processors
 
 import (
 	"time"
 
 	"github.com/sshwy/yaoj-core/pkg/internal/judger"
+	"github.com/sshwy/yaoj-core/pkg/processor"
 )
 
 // Execute testlib checker
@@ -16,7 +17,7 @@ func (r CheckerTestlib) Label() (inputlabel []string, outputlabel []string) {
 	return []string{"checker", "input", "output", "answer"},
 		[]string{"xmlreport", "stderr", "judgerlog"}
 }
-func (r CheckerTestlib) Run(input []string, output []string) *judger.Result {
+func (r CheckerTestlib) Run(input []string, output []string) *Result {
 	res, err := judger.Judge(
 		judger.WithArgument("/dev/null", "/dev/null", output[1], input[0],
 			input[1], input[2], input[3], output[0], "-appes"),
@@ -27,12 +28,12 @@ func (r CheckerTestlib) Run(input []string, output []string) *judger.Result {
 		judger.WithOutput(10*judger.MB),
 	)
 	if err != nil {
-		return &judger.Result{
-			Code: judger.SystemError,
+		return &Result{
+			Code: processor.SystemError,
 			Msg:  err.Error(),
 		}
 	}
-	return res
+	return res.ProcResult()
 }
 
 var _ Processor = CheckerTestlib{}

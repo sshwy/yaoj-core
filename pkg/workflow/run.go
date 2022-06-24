@@ -9,7 +9,7 @@ import (
 	"path"
 
 	"github.com/k0kubun/pp/v3"
-	"github.com/sshwy/yaoj-core/pkg/internal/judger"
+	"github.com/sshwy/yaoj-core/pkg/processor"
 	"github.com/sshwy/yaoj-core/pkg/utils"
 )
 
@@ -32,7 +32,7 @@ type RuntimeNode struct {
 	// paths of output files
 	Output []string
 	// result of processor
-	Result *judger.Result
+	Result *processor.Result
 	hash   sha
 }
 

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sshwy/yaoj-core/pkg/internal/processors"
 	"github.com/sshwy/yaoj-core/pkg/processor"
 	"github.com/sshwy/yaoj-core/pkg/utils"
 )
@@ -38,7 +39,7 @@ type Node struct {
 
 // Get the processor of the node.
 func (r Node) Processor() processor.Processor {
-	return processor.Get(r.ProcName)
+	return processors.Get(r.ProcName)
 }
 
 type WorkflowGraph struct {

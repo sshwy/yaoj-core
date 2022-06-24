@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/sshwy/yaoj-core/pkg/internal/judger"
+	"github.com/sshwy/yaoj-core/pkg/processor"
 	"github.com/sshwy/yaoj-core/pkg/workflow"
 )
 
@@ -10,7 +10,7 @@ type analyzerPlugin struct {
 
 func (r analyzerPlugin) Analyze(nodes map[string]workflow.RuntimeNode, fullscore float64) workflow.Result {
 	for _, node := range nodes {
-		if node.Result.Code != judger.Ok {
+		if node.Result.Code != processor.Ok {
 			return workflow.Result{
 				ResultMeta: workflow.ResultMeta{
 					Score:     0,

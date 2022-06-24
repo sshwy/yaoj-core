@@ -3,8 +3,6 @@ package processor
 import (
 	"fmt"
 	goPlugin "plugin"
-
-	"github.com/sshwy/yaoj-core/pkg/internal/judger"
 )
 
 // Plugin describes how to build a custom processor by creating a shared
@@ -63,16 +61,16 @@ type pluginProcessor struct {
 
 var _ Processor = (*pluginProcessor)(nil)
 
-func (r *pluginProcessor) Run(input []string, output []string) *judger.Result {
+func (r *pluginProcessor) Run(input []string, output []string) *Result {
 	code := r.runner(input, output)
 	if code != 0 {
-		return &judger.Result{
-			Code: judger.ExitError,
+		return &Result{
+			Code: ExitError,
 			Msg:  fmt.Sprintf("exit with code %d", code),
 		}
 	} else {
-		return &judger.Result{
-			Code: judger.Ok,
+		return &Result{
+			Code: Ok,
 		}
 	}
 }

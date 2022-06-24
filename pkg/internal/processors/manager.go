@@ -1,4 +1,4 @@
-package processor
+package processors
 
 var processors map[string]Processor = make(map[string]Processor)
 
