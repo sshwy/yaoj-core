@@ -8,8 +8,8 @@ import (
 	"path"
 	"strconv"
 
-	"github.com/sshwy/yaoj-core/utils"
-	"github.com/sshwy/yaoj-core/workflow"
+	"github.com/sshwy/yaoj-core/pkg/utils"
+	"github.com/sshwy/yaoj-core/pkg/workflow"
 )
 
 type Problem struct {

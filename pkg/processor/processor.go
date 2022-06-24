@@ -2,7 +2,7 @@
 package processor
 
 import (
-	"github.com/sshwy/yaoj-core/internal/judger"
+	"github.com/sshwy/yaoj-core/pkg/internal/judger"
 )
 
 // Processor takes a series of input (files) and generates a series of outputs.

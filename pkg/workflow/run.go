@@ -9,8 +9,8 @@ import (
 	"path"
 
 	"github.com/k0kubun/pp/v3"
-	"github.com/sshwy/yaoj-core/internal/judger"
-	"github.com/sshwy/yaoj-core/utils"
+	"github.com/sshwy/yaoj-core/pkg/internal/judger"
+	"github.com/sshwy/yaoj-core/pkg/utils"
 )
 
 var logger = log.New(os.Stderr, "[workflow] ", log.LstdFlags|log.Lshortfile|log.Lmsgprefix)

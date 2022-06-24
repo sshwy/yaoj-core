@@ -3,7 +3,7 @@ package processor
 import (
 	"os"
 
-	"github.com/sshwy/yaoj-core/internal/judger"
+	"github.com/sshwy/yaoj-core/pkg/internal/judger"
 )
 
 // Run a program reading from stdin and print to stdout and stderr.

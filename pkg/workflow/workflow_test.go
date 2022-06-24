@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/k0kubun/pp/v3"
-	"github.com/sshwy/yaoj-core/workflow"
+	"github.com/sshwy/yaoj-core/pkg/workflow"
 )
 
 func TestWorkflow(t *testing.T) {

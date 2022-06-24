@@ -4,8 +4,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/sshwy/yaoj-core/internal/judger"
-	"github.com/sshwy/yaoj-core/utils"
+	"github.com/sshwy/yaoj-core/pkg/internal/judger"
+	"github.com/sshwy/yaoj-core/pkg/utils"
 )
 
 // Inputmaker make input according to "option": "raw" means "source" provides

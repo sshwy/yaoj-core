@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/bitfield/script"
-	"github.com/sshwy/yaoj-core/internal/judger"
-	"github.com/sshwy/yaoj-core/processor"
+	"github.com/sshwy/yaoj-core/pkg/internal/judger"
+	"github.com/sshwy/yaoj-core/pkg/processor"
 )
 
 //go:generate go build -buildmode=plugin -o ./testdata/diff-go ./testdata/diff-go/main.go

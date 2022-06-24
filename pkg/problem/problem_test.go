@@ -6,7 +6,7 @@ import (
 
 	"github.com/bitfield/script"
 	"github.com/k0kubun/pp/v3"
-	"github.com/sshwy/yaoj-core/problem"
+	"github.com/sshwy/yaoj-core/pkg/problem"
 )
 
 func TestNew(t *testing.T) {

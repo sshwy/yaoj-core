@@ -4,7 +4,7 @@ import (
 	"fmt"
 	goPlugin "plugin"
 
-	"github.com/sshwy/yaoj-core/internal/judger"
+	"github.com/sshwy/yaoj-core/pkg/internal/judger"
 )
 
 // Plugin describes how to build a custom processor by creating a shared

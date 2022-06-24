@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/sshwy/yaoj-core/internal/judger"
+	"github.com/sshwy/yaoj-core/pkg/internal/judger"
 )
 
 // Compares two signed huge (big) integers.

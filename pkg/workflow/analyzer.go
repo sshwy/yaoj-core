@@ -4,8 +4,8 @@ import (
 	"fmt"
 	goPlugin "plugin"
 
-	"github.com/sshwy/yaoj-core/internal/judger"
-	"github.com/sshwy/yaoj-core/utils"
+	"github.com/sshwy/yaoj-core/pkg/internal/judger"
+	"github.com/sshwy/yaoj-core/pkg/utils"
 )
 
 // Analyzer generates result of a workflow.
