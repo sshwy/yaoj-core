@@ -2,11 +2,21 @@ package run
 
 import (
 	"fmt"
+	"path"
 	"strconv"
 
 	"github.com/sshwy/yaoj-core/pkg/problem"
 	"github.com/sshwy/yaoj-core/pkg/workflow"
 )
+
+// change a record's relative path to real path
+func toPathMap(r *problem.Problem, rcd map[string]string) *map[string]string {
+	res := map[string]string{}
+	for k, v := range rcd {
+		res[k] = path.Join(r.Dir(), v)
+	}
+	return &res
+}
 
 // Run all testcase in the dir.
 func RunProblem(r *problem.Problem, dir string, submission map[string]string) (*problem.Result, error) {
@@ -22,7 +32,7 @@ func RunProblem(r *problem.Problem, dir string, submission map[string]string) (*
 		"submission": (*map[string]string)(&submission),
 	}
 	if len(r.Static.Record) > 0 {
-		inboundPath["static"] = r.ToPathMap(r.Static.Record[0])
+		inboundPath["static"] = toPathMap(r, r.Static.Record[0])
 	}
 	var result = problem.Result{
 		IsSubtask: r.IsSubtask(),
@@ -34,14 +44,14 @@ func RunProblem(r *problem.Problem, dir string, submission map[string]string) (*
 				Subtaskid: subtask["_subtaskid"],
 				Testcase:  []workflow.Result{},
 			}
-			inboundPath["subtask"] = r.ToPathMap(subtask)
+			inboundPath["subtask"] = toPathMap(r, subtask)
 			tests := r.TestcaseOf(subtask["_subtaskid"])
 			score, err := strconv.ParseFloat(subtask["_score"], 64)
 			if err != nil {
 				return nil, err
 			}
 			for _, test := range tests {
-				inboundPath["testcase"] = r.ToPathMap(test)
+				inboundPath["testcase"] = toPathMap(r, test)
 				res, err := RunWorkflow(r.Workflow(), dir, inboundPath, score/float64(len(tests)))
 				if err != nil {
 					return nil, err
@@ -55,7 +65,7 @@ func RunProblem(r *problem.Problem, dir string, submission map[string]string) (*
 			Testcase: []workflow.Result{},
 		}
 		for _, test := range r.Tests.Record {
-			inboundPath["testcase"] = r.ToPathMap(test)
+			inboundPath["testcase"] = toPathMap(r, test)
 
 			score := r.Fullscore / float64(len(r.Tests.Record))
 			if f, err := strconv.ParseFloat(test["_score"], 64); err == nil {
