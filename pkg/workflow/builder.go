@@ -1,6 +1,10 @@
 package workflow
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/sshwy/yaoj-core/pkg/processor"
+)
 
 // Build a workflow
 type Builder struct {
@@ -48,9 +52,6 @@ func (r *Builder) WorkflowGraph() (*WorkflowGraph, error) {
 	}
 	graph := NewGraph()
 	for name, node := range r.node {
-		if node.Processor() == nil {
-			return nil, fmt.Errorf("invalid processor %s", node.ProcName)
-		}
 		graph.Node[name] = node
 	}
 	for _, edge := range r.edge {
@@ -62,9 +63,9 @@ func (r *Builder) WorkflowGraph() (*WorkflowGraph, error) {
 		if _, ok := graph.Node[to]; !ok {
 			return nil, fmt.Errorf("invalid edge %v", edge)
 		}
-		_, fout := graph.Node[from].Processor().Label()
+		fout := processor.OutputLabel(graph.Node[from].ProcName)
 		a := findIndex(fout, frlabel)
-		tin, _ := graph.Node[to].Processor().Label()
+		tin := processor.InputLabel(graph.Node[to].ProcName)
 		b := findIndex(tin, tolabel)
 		if a == -1 || b == -1 {
 			return nil, fmt.Errorf("invalid edge %v", edge)
@@ -80,7 +81,7 @@ func (r *Builder) WorkflowGraph() (*WorkflowGraph, error) {
 		if _, ok := graph.Node[to]; !ok {
 			return nil, fmt.Errorf("invalid edge %v", edge)
 		}
-		tin, _ := graph.Node[to].Processor().Label()
+		tin := processor.InputLabel(graph.Node[to].ProcName)
 		b := findIndex(tin, tolabel)
 		if b == -1 {
 			return nil, fmt.Errorf("invalid edge %v", edge)
