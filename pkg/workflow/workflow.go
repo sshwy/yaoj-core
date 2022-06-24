@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sshwy/yaoj-core/pkg/processor"
 	"github.com/sshwy/yaoj-core/pkg/utils"
 )
 
@@ -148,4 +149,14 @@ func NewGraph() WorkflowGraph {
 		Edge:    []Edge{},
 		Inbound: map[string]*map[string][]Inbound{},
 	}
+}
+
+type RuntimeNode struct {
+	Node
+	// paths of input files
+	Input []string
+	// paths of output files
+	Output []string
+	// result of processor
+	Result *processor.Result
 }
