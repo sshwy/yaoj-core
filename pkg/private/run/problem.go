@@ -10,14 +10,14 @@ import (
 )
 
 // change a record's relative path to real path
-func toPathMap(r *problem.Problem, rcd map[string]string) *map[string]string {
+func toPathMap(r *problem.ProbData, rcd map[string]string) *map[string]string {
 	res := map[string]string{}
 	for k, v := range rcd {
 		res[k] = path.Join(r.Dir(), v)
 	}
 	return &res
 }
-func testcaseOf(r *problem.Problem, subtaskid string) []map[string]string {
+func testcaseOf(r *problem.ProbData, subtaskid string) []map[string]string {
 	res := []map[string]string{}
 	for _, test := range r.Tests.Record {
 		if test["_subtaskid"] == subtaskid {
@@ -28,7 +28,7 @@ func testcaseOf(r *problem.Problem, subtaskid string) []map[string]string {
 }
 
 // Run all testcase in the dir.
-func RunProblem(r *problem.Problem, dir string, submission map[string]string) (*problem.Result, error) {
+func RunProblem(r *problem.ProbData, dir string, submission map[string]string) (*problem.Result, error) {
 	logger.Printf("run dir=%s", dir)
 	// check submission
 	for k := range r.Submission.Field {

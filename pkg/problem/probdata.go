@@ -23,7 +23,7 @@ type SubtResult struct {
 	Testcase  []workflow.Result
 }
 
-type Problem struct {
+type ProbData struct {
 	// usually 100
 	Fullscore float64
 	dir       string
@@ -41,7 +41,7 @@ type Problem struct {
 }
 
 // Add file to r.dir/patch and return relative path
-func (r *Problem) AddFile(name string, pathname string) (string, error) {
+func (r *ProbData) AddFile(name string, pathname string) (string, error) {
 	if _, err := utils.CopyFile(pathname, path.Join(r.dir, "patch", name)); err != nil {
 		return "", err
 	}
@@ -49,7 +49,7 @@ func (r *Problem) AddFile(name string, pathname string) (string, error) {
 }
 
 // export the problem's data to another empty dir and change itself to the new one
-func (r *Problem) Export(dir string) error {
+func (r *ProbData) Export(dir string) error {
 	os.Mkdir(path.Join(dir, "workflow"), os.ModePerm)
 	graph_json, err := json.Marshal(r.workflow.WorkflowGraph)
 	if err != nil {
@@ -96,7 +96,7 @@ func (r *Problem) Export(dir string) error {
 	return nil
 }
 
-func (r *Problem) exportTable(tb table, dir, dirtb string) (table, error) {
+func (r *ProbData) exportTable(tb table, dir, dirtb string) (table, error) {
 	log.Printf("exportTable %s", dirtb)
 	var res table
 	if res_json, err := json.Marshal(tb); err != nil {
@@ -125,7 +125,7 @@ func (r *Problem) exportTable(tb table, dir, dirtb string) (table, error) {
 }
 
 // Set workflow graph
-func (r *Problem) SetWkflGraph(serial []byte) error {
+func (r *ProbData) SetWkflGraph(serial []byte) error {
 	graph, err := workflow.Load(serial)
 	if err != nil {
 		return err
@@ -135,12 +135,12 @@ func (r *Problem) SetWkflGraph(serial []byte) error {
 }
 
 // load problem from a dir
-func Load(dir string) (*Problem, error) {
+func Load(dir string) (*ProbData, error) {
 	serial, err := os.ReadFile(path.Join(dir, "problem.json"))
 	if err != nil {
 		return nil, err
 	}
-	var prob Problem
+	var prob ProbData
 	if err := json.Unmarshal(serial, &prob); err != nil {
 		return nil, err
 	}
@@ -158,8 +158,8 @@ func Load(dir string) (*Problem, error) {
 }
 
 // create a new problem in an empty dir
-func New(dir string) (*Problem, error) {
-	var prob = Problem{
+func New(dir string) (*ProbData, error) {
+	var prob = ProbData{
 		dir: dir,
 		workflow: workflow.Workflow{
 			WorkflowGraph: &workflow.WorkflowGraph{},
@@ -178,16 +178,16 @@ func New(dir string) (*Problem, error) {
 }
 
 // Whether subtask is enabled.
-func (r *Problem) IsSubtask() bool {
+func (r *ProbData) IsSubtask() bool {
 	return len(r.Subtasks.Field) > 0 && len(r.Subtasks.Record) > 0
 }
 
 // get the workflow
-func (r *Problem) Workflow() workflow.Workflow {
+func (r *ProbData) Workflow() workflow.Workflow {
 	return r.workflow
 }
 
 // get problem dir
-func (r *Problem) Dir() string {
+func (r *ProbData) Dir() string {
 	return r.dir
 }
