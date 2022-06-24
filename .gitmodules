@@ -1,3 +1,0 @@
-[submodule "pkg/internal/judger/yaoj-judger"]
-	path = pkg/internal/judger/yaoj-judger
-	url = https://github.com/sshwy/yaoj-judger
