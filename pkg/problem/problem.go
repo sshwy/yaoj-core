@@ -182,17 +182,6 @@ func (r *Problem) IsSubtask() bool {
 	return len(r.Subtasks.Field) > 0 && len(r.Subtasks.Record) > 0
 }
 
-// get all testcase of a subtask
-func (r *Problem) TestcaseOf(subtaskid string) []record {
-	res := []record{}
-	for _, test := range r.Tests.Record {
-		if test["_subtaskid"] == subtaskid {
-			res = append(res, test)
-		}
-	}
-	return res
-}
-
 // get the workflow
 func (r *Problem) Workflow() workflow.Workflow {
 	return r.workflow
