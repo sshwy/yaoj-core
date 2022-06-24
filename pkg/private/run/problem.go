@@ -17,6 +17,15 @@ func toPathMap(r *problem.Problem, rcd map[string]string) *map[string]string {
 	}
 	return &res
 }
+func testcaseOf(r *problem.Problem, subtaskid string) []map[string]string {
+	res := []map[string]string{}
+	for _, test := range r.Tests.Record {
+		if test["_subtaskid"] == subtaskid {
+			res = append(res, test)
+		}
+	}
+	return res
+}
 
 // Run all testcase in the dir.
 func RunProblem(r *problem.Problem, dir string, submission map[string]string) (*problem.Result, error) {
@@ -45,7 +54,7 @@ func RunProblem(r *problem.Problem, dir string, submission map[string]string) (*
 				Testcase:  []workflow.Result{},
 			}
 			inboundPath["subtask"] = toPathMap(r, subtask)
-			tests := r.TestcaseOf(subtask["_subtaskid"])
+			tests := testcaseOf(r, subtask["_subtaskid"])
 			score, err := strconv.ParseFloat(subtask["_score"], 64)
 			if err != nil {
 				return nil, err
