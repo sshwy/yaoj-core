@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"path"
-	"strconv"
 
 	"github.com/sshwy/yaoj-core/pkg/utils"
 	"github.com/sshwy/yaoj-core/pkg/workflow"
@@ -157,7 +156,7 @@ func New(dir string) (*Problem, error) {
 func (r *Problem) IsSubtask() bool {
 	return len(r.Subtasks.Field) > 0 && len(r.Subtasks.Record) > 0
 }
-func (r *Problem) toPathMap(rcd record) *map[string]string {
+func (r *Problem) ToPathMap(rcd record) *map[string]string {
 	res := map[string]string{}
 	for k, v := range rcd {
 		res[k] = path.Join(r.dir, v)
@@ -165,71 +164,7 @@ func (r *Problem) toPathMap(rcd record) *map[string]string {
 	return &res
 }
 
-// Run all testcase in the dir.
-func (r *Problem) Run(dir string, submission map[string]string) (*Result, error) {
-	logger.Printf("run dir=%s", dir)
-	// check submission
-	for k := range r.Submission.Field {
-		if _, ok := submission[k]; !ok {
-			return nil, fmt.Errorf("submission missing field %s", k)
-		}
-	}
-
-	var inboundPath = map[string]*map[string]string{
-		"submission": (*map[string]string)(&submission),
-	}
-	if len(r.Static.Record) > 0 {
-		inboundPath["static"] = r.toPathMap(r.Static.Record[0])
-	}
-	var result = Result{
-		IsSubtask: r.IsSubtask(),
-		Subtask:   []SubtResult{},
-	}
-	if r.IsSubtask() {
-		for _, subtask := range r.Subtasks.Record {
-			sub_res := SubtResult{
-				Subtaskid: subtask["_subtaskid"],
-				Testcase:  []workflow.Result{},
-			}
-			inboundPath["subtask"] = r.toPathMap(subtask)
-			tests := r.testcaseOf(subtask["_subtaskid"])
-			score, err := strconv.ParseFloat(subtask["_score"], 64)
-			if err != nil {
-				return nil, err
-			}
-			for _, test := range tests {
-				inboundPath["testcase"] = r.toPathMap(test)
-				res, err := workflow.Run(r.workflow, dir, inboundPath, score/float64(len(tests)))
-				if err != nil {
-					return nil, err
-				}
-				sub_res.Testcase = append(sub_res.Testcase, *res)
-			}
-			result.Subtask = append(result.Subtask, sub_res)
-		}
-	} else {
-		sub_res := SubtResult{
-			Testcase: []workflow.Result{},
-		}
-		for _, test := range r.Tests.Record {
-			inboundPath["testcase"] = r.toPathMap(test)
-
-			score := r.Fullscore / float64(len(r.Tests.Record))
-			if f, err := strconv.ParseFloat(test["_score"], 64); err == nil {
-				score = f
-			}
-			res, err := workflow.Run(r.workflow, dir, inboundPath, score)
-			if err != nil {
-				return nil, err
-			}
-			sub_res.Testcase = append(sub_res.Testcase, *res)
-		}
-		result.Subtask = append(result.Subtask, sub_res)
-	}
-	return &result, nil
-}
-
-func (r *Problem) testcaseOf(subtaskid string) []record {
+func (r *Problem) TestcaseOf(subtaskid string) []record {
 	res := []record{}
 	for _, test := range r.Tests.Record {
 		if test["_subtaskid"] == subtaskid {
@@ -237,6 +172,10 @@ func (r *Problem) testcaseOf(subtaskid string) []record {
 		}
 	}
 	return res
+}
+
+func (r *Problem) Workflow() workflow.Workflow {
+	return r.workflow
 }
 
 type Result struct {

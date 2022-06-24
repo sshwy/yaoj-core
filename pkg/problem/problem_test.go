@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/bitfield/script"
-	"github.com/k0kubun/pp/v3"
 	"github.com/sshwy/yaoj-core/pkg/problem"
 )
 
@@ -162,14 +161,14 @@ int main () {
 		return
 	}
 
-	res, err := prob.Run(t.TempDir(), map[string]string{
-		"source": path.Join(dir, "src.cpp"),
-	})
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	pp.Print(res)
+	// res, err := prob.Run(t.TempDir(), map[string]string{
+	// 	"source": path.Join(dir, "src.cpp"),
+	// })
+	// if err != nil {
+	// 	t.Error(err)
+	// 	return
+	// }
+	// pp.Print(res)
 }
 
 // func TestLoad(t *testing.T) {
