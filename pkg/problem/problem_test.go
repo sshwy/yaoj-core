@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/bitfield/script"
+	"github.com/k0kubun/pp/v3"
 	"github.com/sshwy/yaoj-core/pkg/problem"
 )
 
@@ -32,6 +33,7 @@ int main () {
 	`).WriteFile(path.Join(dir, "src.cpp"))
 	script.Echo("1000 1000 204857600 204857600 204857600 204857600 10").WriteFile(path.Join(dir, "cpl.txt"))
 	script.Echo("#!/bin/env bash\nclang++ $1 -o $2").WriteFile(path.Join(dir, "script.sh"))
+	script.Echo("# A + B Problem").WriteFile(path.Join(dir, "tmp.md"))
 
 	prob.Fullscore = 100
 	prob.Tests.Fields().Add("input")
@@ -71,6 +73,10 @@ int main () {
 	o0 := prob.Static.Records().New()
 	o0["limitation"] = "cpl.txt"
 	o0["compilescript"] = "script.sh"
+
+	prob.Statement.Fields().Add("s.zh-CN")
+	record := prob.Statement.Records().New()
+	record["s.zh-CN"] = "tmp.md"
 
 	// net adjuestment
 	err = prob.SetWkflGraph([]byte(`
@@ -160,6 +166,8 @@ int main () {
 		t.Error(err)
 		return
 	}
+
+	pp.Print(prob)
 
 	// res, err := prob.Run(t.TempDir(), map[string]string{
 	// 	"source": path.Join(dir, "src.cpp"),

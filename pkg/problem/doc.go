@@ -13,6 +13,10 @@ structure:
   |---dir/static/
   |-dir/workflow/ stores test workflow
   |---dir/workflow/graph.json stores the workflow graph
+  |-dir/statement/ stores statement files
+  |---dir/statement/s.[lang][id].md stores statement files
+  |---dir/statement/t.[lang][id].md stores tutorial files
+  |---dir/statement/xxx stores assert files
   |-dir/patch/ stores added files
 
 Tests

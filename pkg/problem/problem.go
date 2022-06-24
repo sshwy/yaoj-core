@@ -11,7 +11,20 @@ import (
 	"github.com/sshwy/yaoj-core/pkg/workflow"
 )
 
+// Problem result
+type Result struct {
+	IsSubtask bool
+	Subtask   []SubtResult
+}
+
+// Subtask result
+type SubtResult struct {
+	Subtaskid string
+	Testcase  []workflow.Result
+}
+
 type Problem struct {
+	// usually 100
 	Fullscore float64
 	dir       string
 	workflow  workflow.Workflow
@@ -23,6 +36,8 @@ type Problem struct {
 	Static table
 	// "submission"
 	Submission table
+	// "statement"
+	Statement table
 }
 
 // Add file to r.dir/patch and return relative path
@@ -48,7 +63,9 @@ func (r *Problem) Export(dir string) error {
 	os.Mkdir(path.Join(dir, "data", "subtasks"), os.ModePerm)
 	os.Mkdir(path.Join(dir, "data", "static"), os.ModePerm)
 	os.Mkdir(path.Join(dir, "patch"), os.ModePerm)
-	var tests, subtasks, static table
+	os.Mkdir(path.Join(dir, "statement"), os.ModePerm)
+
+	var tests, subtasks, static, statement table
 	if tests, err = r.exportTable(r.Tests, dir, path.Join("data", "tests")); err != nil {
 		return err
 	}
@@ -58,16 +75,22 @@ func (r *Problem) Export(dir string) error {
 	if static, err = r.exportTable(r.Static, dir, path.Join("data", "static")); err != nil {
 		return err
 	}
+	if statement, err = r.exportTable(r.Statement, dir, path.Join("statement")); err != nil {
+		return err
+	}
+
+	// modify r from now
 	r.Tests = tests
 	r.Subtasks = subtasks
 	r.Static = static
+	r.Statement = statement
 
 	prob_json, err := json.Marshal(*r)
 	if err != nil {
-		return err
+		panic(err)
 	}
 	if err := os.WriteFile(path.Join(dir, "problem.json"), prob_json, 0644); err != nil {
-		return err
+		panic(err)
 	}
 	r.dir = dir
 	return nil
@@ -85,22 +108,23 @@ func (r *Problem) exportTable(tb table, dir, dirtb string) (table, error) {
 	}
 
 	// pp.Print(tb)
-	for i, r2 := range res.Record {
-		for k, v := range r2 {
-			if k[0] == '_' { // private field
+	for i, record := range res.Record {
+		for field, val := range record {
+			if field[0] == '_' { // private field
 				continue
 			}
-			name := fmt.Sprintf("%s%d%s", k, i, path.Ext(v))
-			if _, err := utils.CopyFile(path.Join(r.dir, v), path.Join(dir, dirtb, name)); err != nil {
+			name := fmt.Sprintf("%s%d%s", field, i, path.Ext(val))
+			if _, err := utils.CopyFile(path.Join(r.dir, val), path.Join(dir, dirtb, name)); err != nil {
 				return tb, err
 			}
-			r2[k] = path.Join(dirtb, name)
+			record[field] = path.Join(dirtb, name)
 		}
 	}
 	// pp.Print(res, tb)
 	return res, nil
 }
 
+// Set workflow graph
 func (r *Problem) SetWkflGraph(serial []byte) error {
 	graph, err := workflow.Load(serial)
 	if err != nil {
@@ -145,6 +169,7 @@ func New(dir string) (*Problem, error) {
 		Subtasks:   newTable(),
 		Static:     newTable(),
 		Submission: newTable(),
+		Statement:  newTable(),
 	}
 	if err := prob.Export(dir); err != nil {
 		return nil, err
@@ -156,6 +181,8 @@ func New(dir string) (*Problem, error) {
 func (r *Problem) IsSubtask() bool {
 	return len(r.Subtasks.Field) > 0 && len(r.Subtasks.Record) > 0
 }
+
+// change a record's relative path to real path
 func (r *Problem) ToPathMap(rcd record) *map[string]string {
 	res := map[string]string{}
 	for k, v := range rcd {
@@ -164,6 +191,7 @@ func (r *Problem) ToPathMap(rcd record) *map[string]string {
 	return &res
 }
 
+// get all testcase of a subtask
 func (r *Problem) TestcaseOf(subtaskid string) []record {
 	res := []record{}
 	for _, test := range r.Tests.Record {
@@ -174,15 +202,7 @@ func (r *Problem) TestcaseOf(subtaskid string) []record {
 	return res
 }
 
+// get the workflow
 func (r *Problem) Workflow() workflow.Workflow {
 	return r.workflow
-}
-
-type Result struct {
-	IsSubtask bool
-	Subtask   []SubtResult
-}
-type SubtResult struct {
-	Subtaskid string
-	Testcase  []workflow.Result
 }
