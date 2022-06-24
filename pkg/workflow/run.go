@@ -9,6 +9,7 @@ import (
 	"path"
 
 	"github.com/k0kubun/pp/v3"
+	"github.com/sshwy/yaoj-core/pkg/private/processors"
 	"github.com/sshwy/yaoj-core/pkg/processor"
 	"github.com/sshwy/yaoj-core/pkg/utils"
 )
@@ -104,7 +105,7 @@ func (r *RuntimeNode) outputHash() (res []sha) {
 func runtimeNodes(node map[string]Node) (res map[string]RuntimeNode) {
 	res = map[string]RuntimeNode{}
 	for k, v := range node {
-		inLabel, ouLabel := v.Processor().Label()
+		inLabel, ouLabel := processors.Get(v.ProcName).Label()
 		res[k] = RuntimeNode{
 			Node:   v,
 			Input:  make([]string, len(inLabel)),
@@ -150,13 +151,14 @@ func topologicalEnum(w Workflow, handler func(id string) error) error {
 	return nil
 }
 
+// Get the processor of the node.
+func (r RuntimeNode) Processor() processor.Processor {
+	return processors.Get(r.ProcName)
+}
+
 // perform a workflow in a directory.
 // inboundPath: map[datagroup_name]*map[field]filename
 func Run(w Workflow, dir string, inboundPath map[string]*map[string]string, fullscore float64) (*Result, error) {
-	if err := w.Valid(); err != nil {
-		return nil, fmt.Errorf("workflow validation: %s", err.Error())
-	}
-
 	nodes := runtimeNodes(w.Node)
 
 	if len(w.Inbound) != len(inboundPath) {

@@ -88,7 +88,7 @@ func (r *Problem) exportTable(tb table, dir, dirtb string) (table, error) {
 	// pp.Print(tb)
 	for i, r2 := range res.Record {
 		for k, v := range r2 {
-			if k[0] == '_' { // internal field
+			if k[0] == '_' { // private field
 				continue
 			}
 			name := fmt.Sprintf("%s%d%s", k, i, path.Ext(v))

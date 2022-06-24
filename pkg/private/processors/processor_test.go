@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/bitfield/script"
-	"github.com/sshwy/yaoj-core/pkg/internal/processors"
+	"github.com/sshwy/yaoj-core/pkg/private/processors"
 	"github.com/sshwy/yaoj-core/pkg/processor"
 )
 

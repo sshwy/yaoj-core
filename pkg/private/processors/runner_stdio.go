@@ -3,7 +3,7 @@ package processors
 import (
 	"os"
 
-	"github.com/sshwy/yaoj-core/pkg/internal/judger"
+	"github.com/sshwy/yaoj-core/pkg/private/judger"
 	"github.com/sshwy/yaoj-core/pkg/processor"
 )
 

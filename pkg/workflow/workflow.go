@@ -2,13 +2,10 @@ package workflow
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/sshwy/yaoj-core/pkg/internal/processors"
-	"github.com/sshwy/yaoj-core/pkg/processor"
 	"github.com/sshwy/yaoj-core/pkg/utils"
 )
 
@@ -35,11 +32,6 @@ type Node struct {
 	ProcName string
 	// key node is attached importance by Analyzer
 	Key bool
-}
-
-// Get the processor of the node.
-func (r Node) Processor() processor.Processor {
-	return processors.Get(r.ProcName)
 }
 
 type WorkflowGraph struct {
@@ -82,36 +74,11 @@ func (r *WorkflowGraph) EdgeTo(name string) []Edge {
 	return res
 }
 
-// check whether it's a well-formatted DAG, its inbound coverage and sth else
-func (r *WorkflowGraph) Valid() error {
-	for i, node := range r.Node {
-		proc := node.Processor()
-		if proc == nil {
-			return fmt.Errorf("node[%s] has invalid processor name (%s)", i, node.ProcName)
-		}
-	}
-	for i, group := range r.Inbound {
-		for j, bounds := range *group {
-			for _, bound := range bounds {
-				node := r.Node[bound.Name]
-				inLabel, _ := node.Processor().Label()
-				if bound.LabelIndex >= len(inLabel) {
-					return fmt.Errorf("inbound[%s][%s] has invalid node label index %d", i, j, bound.LabelIndex)
-				}
-			}
-		}
-	}
-	return nil
-}
-
 // Load graph from serialized data (json)
 func Load(serial []byte) (*WorkflowGraph, error) {
 	var graph WorkflowGraph
 	err := json.Unmarshal(serial, &graph)
 	if err != nil {
-		return nil, err
-	}
-	if err := graph.Valid(); err != nil {
 		return nil, err
 	}
 	return &graph, nil
