@@ -186,5 +186,3 @@ type SubtResult struct {
 	Subtaskid string
 	Testcase  []workflow.Result
 }
-
-var logger = log.New(os.Stderr, "[problem] ", log.LstdFlags|log.Lshortfile|log.Lmsgprefix)
