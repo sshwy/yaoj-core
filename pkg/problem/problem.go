@@ -182,15 +182,6 @@ func (r *Problem) IsSubtask() bool {
 	return len(r.Subtasks.Field) > 0 && len(r.Subtasks.Record) > 0
 }
 
-// change a record's relative path to real path
-func (r *Problem) ToPathMap(rcd record) *map[string]string {
-	res := map[string]string{}
-	for k, v := range rcd {
-		res[k] = path.Join(r.dir, v)
-	}
-	return &res
-}
-
 // get all testcase of a subtask
 func (r *Problem) TestcaseOf(subtaskid string) []record {
 	res := []record{}
@@ -205,4 +196,9 @@ func (r *Problem) TestcaseOf(subtaskid string) []record {
 // get the workflow
 func (r *Problem) Workflow() workflow.Workflow {
 	return r.workflow
+}
+
+// get problem dir
+func (r *Problem) Dir() string {
+	return r.dir
 }
