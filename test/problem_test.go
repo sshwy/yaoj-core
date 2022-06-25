@@ -85,82 +85,7 @@ int main () {
 	record["s."+zh] = "tmp.md"
 
 	// net adjuestment
-	err = probData.SetWkflGraph([]byte(`
-{
-    "Node": {
-        "check": {
-            "ProcName": "checker:hcmp"
-        },
-        "compile": {
-            "ProcName": "compiler"
-        },
-        "run": {
-            "ProcName": "runner:stdio",
-            "Key": true
-        }
-    },
-    "Edge": [
-        {
-            "From": {
-                "Name": "compile",
-                "LabelIndex": 0
-            },
-            "To": {
-                "Name": "run",
-                "LabelIndex": 0
-            }
-        },
-        {
-            "From": {
-                "Name": "run",
-                "LabelIndex": 0
-            },
-            "To": {
-                "Name": "check",
-                "LabelIndex": 0
-            }
-        }
-    ],
-    "Inbound": {
-        "static": {
-            "compilescript": [
-                {
-                    "Name": "compile",
-                    "LabelIndex": 1
-                }
-            ],
-            "limitation": [
-                {
-                    "Name": "run",
-                    "LabelIndex": 2
-                }
-            ]
-        },
-        "submission": {
-            "source": [
-                {
-                    "Name": "compile",
-                    "LabelIndex": 0
-                }
-            ]
-        },
-        "tests": {
-            "answer": [
-                {
-                    "Name": "check",
-                    "LabelIndex": 1
-                }
-            ],
-            "input": [
-                {
-                    "Name": "run",
-                    "LabelIndex": 1
-                }
-            ]
-        }
-    }
-}
-	`))
+	err = probData.SetWkflGraph(wkflGraph.Serialize())
 	if err != nil {
 		t.Error(err)
 		return
@@ -207,16 +132,4 @@ func ExtractProblem(t *testing.T) {
 		return
 	}
 
-}
-
-func TestAll(t *testing.T) {
-	probDataDir = t.TempDir()
-	problemDumpDir = t.TempDir()
-	if t.Run("MakeProbData", MakeProbData) {
-		if t.Run("LoadProblem", LoadProblem) {
-			if t.Run("DumpProblem", DumpProblem) {
-				t.Run("ExtractProblem", ExtractProblem)
-			}
-		}
-	}
 }
