@@ -23,12 +23,14 @@ type SubtResult struct {
 	Testcase  []workflow.Result
 }
 
+// Problem data module
 type ProbData struct {
-	// usually 100
+	// Usually 100.
+	// Full score can be used to determine the point of testcase
 	Fullscore float64
 	dir       string
 	workflow  workflow.Workflow
-	// "testcase" _subtaskid, _score ("average", {number})
+	// "tests" _subtaskid, _score ("average", {number})
 	Tests table
 	// "subtask" _subtaskid, _score
 	Subtasks table
@@ -37,6 +39,8 @@ type ProbData struct {
 	// "submission"
 	Submission table
 	// "statement"
+	// Statement has 1 record. "s.{lang}", "t.{lang}" represents statement and tutorial respectively.
+	// Others are just filename.
 	Statement table
 }
 
@@ -135,7 +139,7 @@ func (r *ProbData) SetWkflGraph(serial []byte) error {
 }
 
 // load problem from a dir
-func Load(dir string) (*ProbData, error) {
+func LoadProbData(dir string) (*ProbData, error) {
 	serial, err := os.ReadFile(path.Join(dir, "problem.json"))
 	if err != nil {
 		return nil, err
@@ -158,7 +162,7 @@ func Load(dir string) (*ProbData, error) {
 }
 
 // create a new problem in an empty dir
-func New(dir string) (*ProbData, error) {
+func NewProbData(dir string) (*ProbData, error) {
 	var prob = ProbData{
 		dir: dir,
 		workflow: workflow.Workflow{
