@@ -60,7 +60,7 @@ func RunProblem(r *problem.ProbData, dir string, submission map[string]string) (
 				return nil, err
 			}
 			for _, test := range tests {
-				inboundPath["testcase"] = toPathMap(r, test)
+				inboundPath["tests"] = toPathMap(r, test)
 				res, err := RunWorkflow(r.Workflow(), dir, inboundPath, score/float64(len(tests)))
 				if err != nil {
 					return nil, err
@@ -74,7 +74,7 @@ func RunProblem(r *problem.ProbData, dir string, submission map[string]string) (
 			Testcase: []workflow.Result{},
 		}
 		for _, test := range r.Tests.Record {
-			inboundPath["testcase"] = toPathMap(r, test)
+			inboundPath["tests"] = toPathMap(r, test)
 
 			score := r.Fullscore / float64(len(r.Tests.Record))
 			if f, err := strconv.ParseFloat(test["_score"], 64); err == nil {
