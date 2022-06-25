@@ -37,13 +37,22 @@ func (r *Builder) AddEdge(from, frlabel, to, tolabel string) {
 	r.edge = append(r.edge, [4]string{from, frlabel, to, tolabel})
 }
 
-func (r *Builder) AddInbound(group, field, to, tolabel string) {
+type Groupname string
+
+const (
+	Gtests  Groupname = "tests"
+	Gsubt   Groupname = "Subtask"
+	Gstatic Groupname = "static"
+	Gsubm   Groupname = "submission"
+)
+
+func (r *Builder) AddInbound(group Groupname, field, to, tolabel string) {
 	r.tryInit()
-	if group != "testcase" && group != "subtask" && group != "submission" && group != "static" {
+	if group != Gtests && group != Gstatic && group != Gsubm && group != Gsubt {
 		r.err = fmt.Errorf("invalid group %s", group)
 		return
 	}
-	r.inbound = append(r.inbound, [4]string{group, field, to, tolabel})
+	r.inbound = append(r.inbound, [4]string{string(group), field, to, tolabel})
 }
 
 func (r *Builder) WorkflowGraph() (*WorkflowGraph, error) {
