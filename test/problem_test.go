@@ -7,7 +7,6 @@ import (
 	"github.com/bitfield/script"
 	"github.com/k0kubun/pp/v3"
 	"github.com/sshwy/yaoj-core/pkg/problem"
-	"golang.org/x/text/language"
 )
 
 var probData *problem.ProbData
@@ -79,10 +78,7 @@ int main () {
 	o0["limitation"] = "cpl.txt"
 	o0["compilescript"] = "script.sh"
 
-	zh := language.Chinese.String()
-	probData.Statement.Fields().Add("s." + zh)
-	record := probData.Statement.Records().New()
-	record["s."+zh] = "tmp.md"
+	probData.SetStmt("zh", "tmp.md")
 
 	// net adjuestment
 	err = probData.SetWkflGraph(wkflGraph.Serialize())

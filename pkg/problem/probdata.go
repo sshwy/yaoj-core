@@ -41,11 +41,12 @@ type ProbData struct {
 	// "statement"
 	// Statement has 1 record. "s.{lang}", "t.{lang}" represents statement and tutorial respectively.
 	// Others are just filename.
-	Statement table
+	Statement record
 }
 
 // Add file to r.dir/patch and return relative path
 func (r *ProbData) AddFile(name string, pathname string) (string, error) {
+	logger.Printf("AddFile: %#v => %#v", pathname, name)
 	if _, err := utils.CopyFile(pathname, path.Join(r.dir, "patch", name)); err != nil {
 		return "", err
 	}
@@ -69,7 +70,8 @@ func (r *ProbData) Export(dir string) error {
 	os.Mkdir(path.Join(dir, "patch"), os.ModePerm)
 	os.Mkdir(path.Join(dir, "statement"), os.ModePerm)
 
-	var tests, subtasks, static, statement table
+	var tests, subtasks, static table
+	var statement record
 	if tests, err = r.exportTable(r.Tests, dir, path.Join("data", "tests")); err != nil {
 		return err
 	}
@@ -79,7 +81,7 @@ func (r *ProbData) Export(dir string) error {
 	if static, err = r.exportTable(r.Static, dir, path.Join("data", "static")); err != nil {
 		return err
 	}
-	if statement, err = r.exportTable(r.Statement, dir, path.Join("statement")); err != nil {
+	if statement, err = r.exportRecord(0, r.Statement, dir, path.Join("statement")); err != nil {
 		return err
 	}
 
@@ -100,32 +102,61 @@ func (r *ProbData) Export(dir string) error {
 	return nil
 }
 
-func (r *ProbData) exportTable(tb table, dir, dirtb string) (table, error) {
-	log.Printf("exportTable %s", dirtb)
-	var res table
+func copyTable(tb table) (res table) {
 	if res_json, err := json.Marshal(tb); err != nil {
-		return tb, err
+		panic(err)
 	} else {
 		if err := json.Unmarshal(res_json, &res); err != nil {
+			panic(err)
+		}
+	}
+	return
+}
+
+func (r *ProbData) exportRecord(id int, rcd record, newroot, dircd string) (res record, err error) {
+	log.Printf("Export Record #%d %#v", id, dircd)
+	res = make(record)
+	for field, val := range rcd {
+		if field[0] == '_' { // private field
+			continue
+		}
+		name := fmt.Sprintf("%s%d%s", field, id, path.Ext(val))
+		if _, err := utils.CopyFile(path.Join(r.dir, val), path.Join(newroot, dircd, name)); err != nil {
+			return res, err
+		}
+		res[field] = path.Join(dircd, name)
+	}
+	return res, nil
+}
+
+func (r *ProbData) exportTable(tb table, newroot, dirtb string) (table, error) {
+	log.Printf("Export Table %#v", dirtb)
+	res := copyTable(tb)
+
+	for i, record := range tb.Record {
+		rcd, err := r.exportRecord(i, record, newroot, dirtb)
+		if err != nil {
 			return tb, err
 		}
+		res.Record[i] = rcd
 	}
+	return res, nil
 
 	// pp.Print(tb)
-	for i, record := range res.Record {
-		for field, val := range record {
-			if field[0] == '_' { // private field
-				continue
-			}
-			name := fmt.Sprintf("%s%d%s", field, i, path.Ext(val))
-			if _, err := utils.CopyFile(path.Join(r.dir, val), path.Join(dir, dirtb, name)); err != nil {
-				return tb, err
-			}
-			record[field] = path.Join(dirtb, name)
-		}
-	}
+	// for i, record := range res.Record {
+	// 	for field, val := range record {
+	// 		if field[0] == '_' { // private field
+	// 			continue
+	// 		}
+	// 		name := fmt.Sprintf("%s%d%s", field, i, path.Ext(val))
+	// 		if _, err := utils.CopyFile(path.Join(r.dir, val), path.Join(newroot, dirtb, name)); err != nil {
+	// 			return tb, err
+	// 		}
+	// 		record[field] = path.Join(dirtb, name)
+	// 	}
+	// }
 	// pp.Print(res, tb)
-	return res, nil
+	// return res, nil
 }
 
 // Set workflow graph
@@ -173,7 +204,7 @@ func NewProbData(dir string) (*ProbData, error) {
 		Subtasks:   newTable(),
 		Static:     newTable(),
 		Submission: newTable(),
-		Statement:  newTable(),
+		Statement:  make(record),
 	}
 	if err := prob.Export(dir); err != nil {
 		return nil, err
@@ -194,4 +225,9 @@ func (r *ProbData) Workflow() workflow.Workflow {
 // get problem dir
 func (r *ProbData) Dir() string {
 	return r.dir
+}
+
+// Set statement content to file in r.dir
+func (r *ProbData) SetStmt(lang string, file string) {
+	r.Statement["s."+GuessLang(lang)] = file
 }

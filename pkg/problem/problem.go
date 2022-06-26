@@ -43,19 +43,19 @@ func (r *prob) tryReadFile(filename string) []byte {
 func (r *prob) Stmt(lang string) []byte {
 	lang = GuessLang(lang)
 	logger.Printf("Get statement lang=%s", lang)
-	filename := r.data.Statement.Record[0]["s."+lang]
+	filename := r.data.Statement["s."+lang]
 	return r.tryReadFile(filename)
 }
 
 func (r *prob) Tutr(lang string) []byte {
 	lang = GuessLang(lang)
 	logger.Printf("Get tutorial lang=%s", lang)
-	filename := r.data.Statement.Record[0]["t."+lang]
+	filename := r.data.Statement["t."+lang]
 	return r.tryReadFile(filename)
 }
 
 func (r *prob) Assert(filename string) (*os.File, error) {
-	return os.Open(path.Join(r.data.dir, r.data.Statement.Record[0][filename]))
+	return os.Open(path.Join(r.data.dir, r.data.Statement[filename]))
 }
 
 // 获取提交格式的数据表格
