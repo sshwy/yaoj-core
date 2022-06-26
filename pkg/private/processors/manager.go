@@ -24,4 +24,5 @@ func init() {
 	Register("runner:fileio", RunnerFileio{})
 	Register("runner:stdio", RunnerStdio{})
 	Register("compiler:testlib", CompilerTestlib{})
+	Register("compiler:auto", CompilerAuto{})
 }
