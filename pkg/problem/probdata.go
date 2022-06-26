@@ -46,11 +46,12 @@ type ProbData struct {
 
 // Add file to r.dir/patch and return relative path
 func (r *ProbData) AddFile(name string, pathname string) (string, error) {
+	name = path.Join("patch", name)
 	logger.Printf("AddFile: %#v => %#v", pathname, name)
-	if _, err := utils.CopyFile(pathname, path.Join(r.dir, "patch", name)); err != nil {
+	if _, err := utils.CopyFile(pathname, path.Join(r.dir, name)); err != nil {
 		return "", err
 	}
-	return path.Join("patch", name), nil
+	return name, nil
 }
 
 // export the problem's data to another empty dir and change itself to the new one
@@ -194,10 +195,11 @@ func LoadProbData(dir string) (*ProbData, error) {
 
 // create a new problem in an empty dir
 func NewProbData(dir string) (*ProbData, error) {
+	graph := workflow.NewGraph()
 	var prob = ProbData{
 		dir: dir,
 		workflow: workflow.Workflow{
-			WorkflowGraph: &workflow.WorkflowGraph{},
+			WorkflowGraph: &graph,
 			Analyzer:      workflow.DefaultAnalyzer{},
 		},
 		Tests:      newTable(),
@@ -230,4 +232,13 @@ func (r *ProbData) Dir() string {
 // Set statement content to file in r.dir
 func (r *ProbData) SetStmt(lang string, file string) {
 	r.Statement["s."+GuessLang(lang)] = file
+}
+
+func (r *ProbData) SetValFile(rcd record, field string, filename string) error {
+	pin, err := r.AddFile(utils.RandomString(5)+"_"+path.Base(filename), filename)
+	if err != nil {
+		return err
+	}
+	rcd[field] = pin
+	return nil
 }
