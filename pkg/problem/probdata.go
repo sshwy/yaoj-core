@@ -3,6 +3,7 @@ package problem
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path"
@@ -34,10 +35,10 @@ type ProbData struct {
 	Tests table
 	// "subtask" _subtaskid, _score
 	Subtasks table
-	// "static"
-	Static table
 	// "submission"
 	Submission table
+	// "static"
+	Static record
 	// "statement"
 	// Statement has 1 record. "s.{lang}", "t.{lang}" represents statement and tutorial respectively.
 	// Others are just filename.
@@ -49,6 +50,21 @@ func (r *ProbData) AddFile(name string, pathname string) (string, error) {
 	name = path.Join("patch", name)
 	logger.Printf("AddFile: %#v => %#v", pathname, name)
 	if _, err := utils.CopyFile(pathname, path.Join(r.dir, name)); err != nil {
+		return "", err
+	}
+	return name, nil
+}
+
+func (r *ProbData) AddFileReader(name string, file io.Reader) (string, error) {
+	name = path.Join("patch", name)
+	logger.Printf("AddFile: reader => %#v", name)
+	destination, err := os.Create(path.Join(r.dir, name))
+	if err != nil {
+		return "", err
+	}
+	defer destination.Close()
+	_, err = io.Copy(destination, file)
+	if err != nil {
 		return "", err
 	}
 	return name, nil
@@ -71,15 +87,15 @@ func (r *ProbData) Export(dir string) error {
 	os.Mkdir(path.Join(dir, "patch"), os.ModePerm)
 	os.Mkdir(path.Join(dir, "statement"), os.ModePerm)
 
-	var tests, subtasks, static table
-	var statement record
+	var tests, subtasks table
+	var statement, static record
 	if tests, err = r.exportTable(r.Tests, dir, path.Join("data", "tests")); err != nil {
 		return err
 	}
 	if subtasks, err = r.exportTable(r.Subtasks, dir, path.Join("data", "subtasks")); err != nil {
 		return err
 	}
-	if static, err = r.exportTable(r.Static, dir, path.Join("data", "static")); err != nil {
+	if static, err = r.exportRecord(0, r.Static, dir, path.Join("data", "static")); err != nil {
 		return err
 	}
 	if statement, err = r.exportRecord(0, r.Statement, dir, path.Join("statement")); err != nil {
@@ -204,7 +220,7 @@ func NewProbData(dir string) (*ProbData, error) {
 		},
 		Tests:      newTable(),
 		Subtasks:   newTable(),
-		Static:     newTable(),
+		Static:     make(record),
 		Submission: newTable(),
 		Statement:  make(record),
 	}

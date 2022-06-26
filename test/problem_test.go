@@ -72,11 +72,8 @@ int main () {
 	r3["answer"] = r0["answer"]
 	r3["_score"] = "average"
 
-	probData.Static.Fields().Add("limitation")
-	probData.Static.Fields().Add("compilescript")
-	o0 := probData.Static.Records().New()
-	o0["limitation"] = "cpl.txt"
-	o0["compilescript"] = "script.sh"
+	probData.Static["limitation"] = "cpl.txt"
+	probData.Static["compilescript"] = "script.sh"
 
 	probData.SetStmt("zh", "tmp.md")
 

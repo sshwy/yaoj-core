@@ -40,9 +40,7 @@ func RunProblem(r *problem.ProbData, dir string, submission map[string]string) (
 	var inboundPath = map[string]*map[string]string{
 		"submission": (*map[string]string)(&submission),
 	}
-	if len(r.Static.Record) > 0 {
-		inboundPath["static"] = toPathMap(r, r.Static.Record[0])
-	}
+	inboundPath["static"] = toPathMap(r, r.Static)
 	var result = problem.Result{
 		IsSubtask: r.IsSubtask(),
 		Subtask:   []problem.SubtResult{},
