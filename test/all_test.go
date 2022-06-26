@@ -5,9 +5,12 @@ import "testing"
 func TestAll(t *testing.T) {
 	probDataDir = t.TempDir()
 	problemDumpDir = t.TempDir()
-	t.Run("MakeWorkflowGraph", MakeWorkflowGraph)
+	if !t.Run("MakeWorkflowGraph", MakeWorkflowGraph) {
+		return
+	}
 	t.Run("MakeProbData", MakeProbData)
 	t.Run("LoadProblem", LoadProblem)
 	t.Run("DumpProblem", DumpProblem)
 	t.Run("ExtractProblem", ExtractProblem)
+	t.Run("RunProblem", RunProblem)
 }

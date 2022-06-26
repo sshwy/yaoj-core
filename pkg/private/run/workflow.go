@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"path"
 
 	"github.com/k0kubun/pp/v3"
 	"github.com/sshwy/yaoj-core/pkg/private/processors"
@@ -17,7 +16,7 @@ import (
 
 // perform a workflow in a directory.
 // inboundPath: map[datagroup_name]*map[field]filename
-func RunWorkflow(w wk.Workflow, dir string, inboundPath map[string]*map[string]string, fullscore float64) (*wk.Result, error) {
+func RunWorkflow(w wk.Workflow, dir string, inboundPath map[wk.Groupname]*map[string]string, fullscore float64) (*wk.Result, error) {
 	nodes := runtimeNodes(w.Node)
 
 	if len(w.Inbound) != len(inboundPath) {
@@ -41,7 +40,22 @@ func RunWorkflow(w wk.Workflow, dir string, inboundPath map[string]*map[string]s
 		}
 	}
 
-	err := topologicalEnum(w, func(id string) error {
+	previousWd, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		logger.Printf("Chdir %q", previousWd)
+		os.Chdir(previousWd)
+	}()
+
+	err = os.Chdir(dir)
+	if err != nil {
+		return nil, err
+	}
+	logger.Printf("Chdir %q", dir)
+
+	err = topologicalEnum(w, func(id string) error {
 		node := nodes[id]
 		if !node.inputFullfilled() {
 			return fmt.Errorf("input not fullfilled")
@@ -50,12 +64,12 @@ func RunWorkflow(w wk.Workflow, dir string, inboundPath map[string]*map[string]s
 		// log.Print(node.outputHash())
 		// log.Printf("%d, %v", id, node.hash)
 		for i := 0; i < len(node.Output); i++ {
-			node.Output[i] = path.Join(dir, utils.RandomString(10))
+			node.Output[i] = utils.RandomString(10)
 		}
 		for _, edge := range w.EdgeFrom(id) {
 			nodes[edge.To.Name].Input[edge.To.LabelIndex] = nodes[edge.From.Name].Output[edge.From.LabelIndex]
 		}
-		logger.Printf("run node[%s]:", id)
+		logger.Printf("Run node[%s]:", id)
 		logger.Printf("input %+v", node.Input)
 		logger.Printf("output %+v", node.Output)
 		result := node.Processor().Run(node.Input, node.Output)
@@ -73,6 +87,9 @@ func RunWorkflow(w wk.Workflow, dir string, inboundPath map[string]*map[string]s
 		runtimeNodes[name] = node.RuntimeNode
 	}
 	res := w.Analyze(runtimeNodes, fullscore)
+
+	// bs, _ := script.Exec("ls .").Bytes()
+	// logger.Print(string(bs))
 	return &res, nil
 }
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/bitfield/script"
 	"github.com/k0kubun/pp/v3"
+	"github.com/sshwy/yaoj-core/pkg/private/run"
 	"github.com/sshwy/yaoj-core/pkg/problem"
 )
 
@@ -23,18 +24,6 @@ func MakeProbData(t *testing.T) {
 
 	script.Echo("1 2").WriteFile(path.Join(dir, "a.in"))
 	script.Echo("-1093908432").WriteFile(path.Join(dir, "a.ans"))
-	script.Echo(`
-#include<iostream>
-using namespace std;
-
-int main () { 
-  int a, b; 
-  cin >> a >> b;
-  for(int i = 0; i < 100000000; i++) a += b, b += a;
-  cout << a + b << endl;
-  return 0;
-}
-	`).WriteFile(path.Join(dir, "src.cpp"))
 	script.Echo("1000 1000 204857600 204857600 204857600 204857600 10").WriteFile(path.Join(dir, "cpl.txt"))
 	script.Echo("#!/bin/env bash\nclang++ $1 -o $2").WriteFile(path.Join(dir, "script.sh"))
 	script.Echo("# A + B Problem").WriteFile(path.Join(dir, "tmp.md"))
@@ -124,5 +113,29 @@ func ExtractProblem(t *testing.T) {
 		t.Error(err)
 		return
 	}
+}
 
+func RunProblem(t *testing.T) {
+	dir := t.TempDir()
+	script.Echo(`
+#include<iostream>
+using namespace std;
+
+int main () { 
+  int a, b; 
+  cin >> a >> b;
+  for(int i = 0; i < 100000000; i++) a += b, b += a;
+  cout << a + b << endl;
+  return 0;
+}
+	`).WriteFile(path.Join(dir, "src.cpp"))
+
+	res, err := run.RunProblem(theProb.Data(), t.TempDir(), map[string]string{
+		"source": path.Join(dir, "src.cpp"),
+	})
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	t.Log(pp.Sprint(res))
 }

@@ -24,6 +24,7 @@ type Problem interface {
 	Assert(filename string) (*os.File, error)
 	// 获取提交格式的数据表格
 	SubmFields() []string
+	Data() *ProbData
 }
 
 type prob struct {
@@ -222,4 +223,8 @@ func GuessLang(lang string) string {
 	}
 	base, _ := tag.Base()
 	return base.String()
+}
+
+func (r *prob) Data() *ProbData {
+	return r.data
 }

@@ -95,10 +95,10 @@ func (r *Builder) WorkflowGraph() (*WorkflowGraph, error) {
 		if b == -1 {
 			return nil, fmt.Errorf("invalid edge %v", edge)
 		}
-		if graph.Inbound[group] == nil {
-			graph.Inbound[group] = &map[string][]Inbound{}
+		if graph.Inbound[Groupname(group)] == nil {
+			graph.Inbound[Groupname(group)] = &map[string][]Inbound{}
 		}
-		grp := *graph.Inbound[group]
+		grp := *graph.Inbound[Groupname(group)]
 		if grp[field] == nil {
 			grp[field] = []Inbound{}
 		}

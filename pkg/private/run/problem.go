@@ -37,7 +37,7 @@ func RunProblem(r *problem.ProbData, dir string, submission map[string]string) (
 		}
 	}
 
-	var inboundPath = map[string]*map[string]string{
+	var inboundPath = map[workflow.Groupname]*map[string]string{
 		"submission": (*map[string]string)(&submission),
 	}
 	inboundPath["static"] = toPathMap(r, r.Static)

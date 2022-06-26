@@ -41,7 +41,7 @@ type WorkflowGraph struct {
 	Edge []Edge
 	// inbound consists a series of data group.
 	// Inbound: map[datagroup_name]*map[field]Bound
-	Inbound map[string]*map[string][]Inbound
+	Inbound map[Groupname]*map[string][]Inbound
 }
 
 // Generate json content
@@ -147,7 +147,7 @@ func NewGraph() WorkflowGraph {
 	return WorkflowGraph{
 		Node:    map[string]Node{},
 		Edge:    []Edge{},
-		Inbound: map[string]*map[string][]Inbound{},
+		Inbound: map[Groupname]*map[string][]Inbound{},
 	}
 }
 
