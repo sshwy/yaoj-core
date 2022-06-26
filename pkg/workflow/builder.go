@@ -63,6 +63,21 @@ func (r *Builder) WorkflowGraph() (*WorkflowGraph, error) {
 	for name, node := range r.node {
 		graph.Node[name] = node
 	}
+
+	var vis = map[string]*map[string]bool{}
+	mark := func(name string, label string) {
+		if vis[name] == nil {
+			vis[name] = &map[string]bool{}
+		}
+		(*vis[name])[label] = true
+	}
+	get := func(name string, label string) bool {
+		if vis[name] == nil {
+			return false
+		}
+		return (*vis[name])[label]
+	}
+
 	for _, edge := range r.edge {
 		from, frlabel := edge[0], edge[1]
 		if _, ok := graph.Node[from]; !ok {
@@ -78,6 +93,11 @@ func (r *Builder) WorkflowGraph() (*WorkflowGraph, error) {
 		b := findIndex(tin, tolabel)
 		if a == -1 || b == -1 {
 			return nil, fmt.Errorf("invalid edge %v", edge)
+		}
+		if get(to, tolabel) {
+			return nil, fmt.Errorf("invalid edge %v: duplicated dest", edge)
+		} else {
+			mark(to, tolabel)
 		}
 		graph.Edge = append(graph.Edge, Edge{
 			From: Outbound{Name: from, LabelIndex: a},
@@ -95,6 +115,11 @@ func (r *Builder) WorkflowGraph() (*WorkflowGraph, error) {
 		if b == -1 {
 			return nil, fmt.Errorf("invalid edge %v", edge)
 		}
+		if get(to, tolabel) {
+			return nil, fmt.Errorf("invalid edge %v: duplicated dest", edge)
+		} else {
+			mark(to, tolabel)
+		}
 		if graph.Inbound[Groupname(group)] == nil {
 			graph.Inbound[Groupname(group)] = &map[string][]Inbound{}
 		}
@@ -106,6 +131,13 @@ func (r *Builder) WorkflowGraph() (*WorkflowGraph, error) {
 			Name:       to,
 			LabelIndex: b,
 		})
+	}
+	for name, node := range graph.Node {
+		for _, label := range processor.InputLabel(node.ProcName) {
+			if !get(name, label) {
+				return nil, fmt.Errorf("invalid graph: unfullfilled input: %s %s", name, label)
+			}
+		}
 	}
 	return &graph, nil
 }
