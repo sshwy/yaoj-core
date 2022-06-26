@@ -40,6 +40,7 @@ func (r RunnerFileio) Run(input []string, output []string) *Result {
 	}
 	var inf, ouf string
 	fmt.Sscanf(lines[1], "%s%s", &inf, &ouf)
+	logger.Printf("inf=%q, out=%q", inf, ouf)
 	if _, err := utils.CopyFile(input[1], inf); err != nil {
 		return &Result{
 			Code: processor.RuntimeError,

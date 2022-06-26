@@ -60,7 +60,7 @@ func TestProcessor(t *testing.T) {
 	t.Run("RunnerStdio", func(t *testing.T) {
 		fa := path.Join(dir, "a.rsi.in")
 		fb := path.Join(dir, "lim.rsi.in")
-		script.Echo("1 2").WriteFile(fa)
+		script.Echo("5 2").WriteFile(fa)
 		script.Echo("1000 1000 204857600 204857600 204857600 204857600 10").WriteFile(fb)
 		runner := processors.RunnerStdio{}
 		res := runner.Run(
@@ -80,7 +80,21 @@ func TestProcessor(t *testing.T) {
 	t.Run("RunnerFileio", func(t *testing.T) {
 		script.Exec(fmt.Sprintf("clang++ testdata/main2.cpp -o %s", path.Join(dir, "dest2"))).Wait()
 		runner := processors.RunnerFileio{}
-		script.Echo("1000 1000 204857600 204857600 204857600 204857600 10\n/tmp/a.in /tmp/a.out").WriteFile(path.Join(dir, "lim2.in"))
+		script.Echo("1000 1000 204857600 204857600 204857600 204857600 10\nb.in b.out").WriteFile(path.Join(dir, "lim2.in"))
+
+		wd, err := os.Getwd()
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		defer os.Chdir(wd)
+
+		err = os.Chdir(t.TempDir())
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
 		res := runner.Run(
 			[]string{path.Join(dir, "dest2"), path.Join(dir, "a.rsi.in"), path.Join(dir, "lim2.in")},
 			[]string{path.Join(dir, "dest2.out"), path.Join(dir, "dest2.err"), path.Join(dir, "dest.judger2.log")},
