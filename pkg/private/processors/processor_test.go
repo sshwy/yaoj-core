@@ -170,6 +170,32 @@ func TestProcessor(t *testing.T) {
 		}
 		t.Log(script.File(path.Join(dir, "igen3.out")).String())
 	})
+
+	t.Run("CompilerTestlib", func(t *testing.T) {
+		compiler := processors.CompilerTestlib{}
+		wd, err := os.Getwd()
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		defer os.Chdir(wd)
+
+		err = os.Chdir(t.TempDir())
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		res := compiler.Run(
+			[]string{path.Join(wd, "testdata/yesno.cpp"), path.Join(wd, "testdata/testlib.h")},
+			[]string{path.Join(dir, "ysn2"), path.Join("ysn2.log"), path.Join(dir, "ysn2.jlog")},
+		)
+		if res.Code != processor.Ok {
+			t.Errorf("expect %v, found %v Msg=%s", processor.Ok, res.Code, res.Msg)
+			return
+		}
+		t.Log(res)
+	})
+
 	t.Run("manager", func(t *testing.T) {
 		mp := processors.GetAll()
 		var s = []struct {

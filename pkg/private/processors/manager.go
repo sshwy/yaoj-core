@@ -23,4 +23,5 @@ func init() {
 	Register("generator:testlib", GeneratorTestlib{})
 	Register("runner:fileio", RunnerFileio{})
 	Register("runner:stdio", RunnerStdio{})
+	Register("compiler:testlib", CompilerTestlib{})
 }

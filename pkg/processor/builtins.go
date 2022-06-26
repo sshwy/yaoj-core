@@ -9,6 +9,8 @@ func init() {
 	ouLabel[`checker:testlib`]=[]string{`xmlreport`,`stderr`,`judgerlog`}
 	inLabel[`compiler`]=[]string{`source`,`script`}
 	ouLabel[`compiler`]=[]string{`result`,`log`,`judgerlog`}
+	inLabel[`compiler:testlib`]=[]string{`source`,`testlib`}
+	ouLabel[`compiler:testlib`]=[]string{`result`,`log`,`judgerlog`}
 	inLabel[`generator:testlib`]=[]string{`generator`,`arguments`}
 	ouLabel[`generator:testlib`]=[]string{`output`,`stderr`,`judgerlog`}
 	inLabel[`inputmaker`]=[]string{`source`,`option`,`generator`}
