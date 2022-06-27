@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/sshwy/yaoj-core/pkg/utils"
 	"github.com/sshwy/yaoj-core/pkg/workflow"
@@ -197,7 +198,11 @@ func LoadProbData(dir string) (*ProbData, error) {
 		return nil, err
 	}
 	// initialize
-	prob.dir = dir
+	absdir, err := filepath.Abs(dir)
+	if err != nil {
+		return nil, err
+	}
+	prob.dir = absdir
 	wkgh, err := workflow.LoadFile(path.Join(dir, "workflow", "graph.json"))
 	if err != nil {
 		return nil, err

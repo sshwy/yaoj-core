@@ -56,8 +56,11 @@ func (r DefaultAnalyzer) Analyze(nodes map[string]RuntimeNode, fullscore float64
 				},
 				File: []ResultFileDisplay{
 					{
-						Title:   "Error Node",
-						Content: fmt.Sprintf("name=%s, proc=%s, Code=%v", i, node.ProcName, node.Result.Code),
+						Title: "Error Node",
+						Content: fmt.Sprintf("name=%s, proc=%s, Code=%v Msg=%s",
+							i, node.ProcName, node.Result.Code,
+							node.Result.Msg,
+						),
 					},
 				},
 			}
