@@ -1,31 +1,47 @@
 package processors
 
 import (
+	"os"
 	"time"
+
+	_ "embed"
 
 	"github.com/sshwy/yaoj-core/pkg/private/judger"
 	"github.com/sshwy/yaoj-core/pkg/processor"
 	"github.com/sshwy/yaoj-core/pkg/utils"
 )
 
-// Compile codeforces testlib (or similar) source file using g++.
+//go:embed testlib.h
+var testlib []byte
+
+// Compile codeforces testlib source file using g++.
 // For input files, "source" represents source file.
 type CompilerTestlib struct {
-	// input: source, testlib
+	// input: source
 	// output: result, log, judgerlog
 }
 
 func (r CompilerTestlib) Label() (inputlabel []string, outputlabel []string) {
-	return []string{"source", "testlib"}, []string{"result", "log", "judgerlog"}
+	return []string{"source"}, []string{"result", "log", "judgerlog"}
 }
 
 func (r CompilerTestlib) Run(input []string, output []string) *Result {
-	if _, err := utils.CopyFile(input[1], "testlib.h"); err != nil {
+	file, err := os.Create("testlib.h")
+	if err != nil {
 		return &Result{
 			Code: processor.RuntimeError,
-			Msg:  "copy: " + err.Error(),
+			Msg:  "open: " + err.Error(),
 		}
 	}
+	_, err = file.Write(testlib)
+	if err != nil {
+		return &Result{
+			Code: processor.RuntimeError,
+			Msg:  "write: " + err.Error(),
+		}
+	}
+	file.Close()
+
 	src := utils.RandomString(10) + ".cpp"
 	if _, err := utils.CopyFile(input[0], src); err != nil {
 		return &Result{
@@ -34,7 +50,7 @@ func (r CompilerTestlib) Run(input []string, output []string) *Result {
 		}
 	}
 	res, err := judger.Judge(
-		judger.WithArgument("/dev/null", "/dev/null", output[1], "/usr/bin/g++", src, "-o", output[0]),
+		judger.WithArgument("/dev/null", "/dev/null", output[1], "/usr/bin/g++", src, "-o", output[0], "-O2", "-Wall"),
 		judger.WithJudger(judger.General),
 		judger.WithPolicy("builtin:free"),
 		judger.WithLog(output[2], 0, false),

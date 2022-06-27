@@ -11,7 +11,7 @@ func init() {
 	ouLabel[`compiler`]=[]string{`result`,`log`,`judgerlog`}
 	inLabel[`compiler:auto`]=[]string{`source`}
 	ouLabel[`compiler:auto`]=[]string{`result`,`log`,`judgerlog`}
-	inLabel[`compiler:testlib`]=[]string{`source`,`testlib`}
+	inLabel[`compiler:testlib`]=[]string{`source`}
 	ouLabel[`compiler:testlib`]=[]string{`result`,`log`,`judgerlog`}
 	inLabel[`generator:testlib`]=[]string{`generator`,`arguments`}
 	ouLabel[`generator:testlib`]=[]string{`output`,`stderr`,`judgerlog`}

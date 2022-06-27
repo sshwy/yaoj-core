@@ -186,7 +186,7 @@ func TestProcessor(t *testing.T) {
 			return
 		}
 		res := compiler.Run(
-			[]string{path.Join(wd, "testdata/yesno.cpp"), path.Join(wd, "testdata/testlib.h")},
+			[]string{path.Join(wd, "testdata/yesno.cpp")},
 			[]string{path.Join(dir, "ysn2"), path.Join("ysn2.log"), path.Join(dir, "ysn2.jlog")},
 		)
 		if res.Code != processor.Ok {
