@@ -77,6 +77,12 @@ The go toolkit command.
    ```
 3. Happy developing!
 
+build migrator:
+
+```bash
+go build ./cmd/migrator
+```
+
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 
