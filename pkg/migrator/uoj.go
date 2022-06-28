@@ -37,6 +37,9 @@ func (r Uoj) Migrate(src string, dest string) (Problem, error) {
 	if err != nil {
 		return nil, err
 	}
+	prob.Fullscore = 100
+
+	// parse statement
 	err = filepath.Walk(path.Join(src, "statement"), func(pathname string, info fs.FileInfo, err error) error {
 		if err != nil {
 			logger.Printf("prevent panic by handling failure accessing a path %q: %v", pathname, err)
@@ -77,8 +80,10 @@ func (r Uoj) Migrate(src string, dest string) (Problem, error) {
 		panic("gg")
 	}
 
+	// parse tests
 	prob.Tests.Fields().Add("input")
 	prob.Tests.Fields().Add("answer")
+	prob.Tests.Fields().Add("_score")
 
 	n_tests := parseInt(conf["n_tests"])
 	for i := 1; i <= n_tests; i++ {
@@ -96,6 +101,7 @@ func (r Uoj) Migrate(src string, dest string) (Problem, error) {
 		}
 	}
 
+	// parse checker
 	if _, ok := conf["use_builtin_checker"]; ok {
 		logger.Printf("use builtin checker: %q", conf["use_builtin_checker"])
 		// copy checker
@@ -154,6 +160,30 @@ func (r Uoj) Migrate(src string, dest string) (Problem, error) {
 	err = prob.SetWkflGraph(graph.Serialize())
 	if err != nil {
 		return nil, err
+	}
+
+	// parse subtask
+	if sNsubt, ok := conf["n_subtasks"]; ok {
+		nsubt, _ := strconv.ParseInt(sNsubt, 10, 32)
+		prob.Tests.Fields().Add("_subtaskid")
+		prob.Subtasks.Fields().Add("_subtaskid")
+		prob.Subtasks.Fields().Add("_score")
+
+		logger.Printf("nsubtask = %d", nsubt)
+
+		las := 0
+		for i := 1; i <= int(nsubt); i++ {
+			endid, _ := strconv.ParseInt(conf[fmt.Sprint("subtask_end_", i)], 10, 32)
+			score, _ := strconv.ParseInt(conf[fmt.Sprint("subtask_score_", i)], 10, 32)
+			record := prob.Subtasks.Records().New()
+			record["_subtaskid"] = fmt.Sprint("subtask_", i)
+			record["_score"] = fmt.Sprint(score)
+
+			for j := las; j < int(endid); j++ {
+				prob.Tests.Record[j]["_subtaskid"] = record["_subtaskid"]
+			}
+			las = int(endid)
+		}
 	}
 
 	// analyzer
