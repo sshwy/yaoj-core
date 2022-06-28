@@ -20,9 +20,9 @@ func RunWorkflow(w wk.Workflow, dir string, inboundPath map[wk.Groupname]*map[st
 	fullscore float64) (*wk.Result, error) {
 	nodes := runtimeNodes(w.Node)
 
-	if len(w.Inbound) != len(inboundPath) {
-		return nil, fmt.Errorf("invalid inboundPath: missing field")
-	}
+	// if len(w.Inbound) != len(inboundPath) {
+	// 	return nil, fmt.Errorf("invalid inboundPath: missing field")
+	// }
 	for i, group := range w.Inbound {
 		if group == nil {
 			return nil, fmt.Errorf("w.Inbound[%s] == nil", i)

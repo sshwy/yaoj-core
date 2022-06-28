@@ -136,13 +136,14 @@ func (r *ProbData) exportRecord(id int, rcd record, newroot, dircd string) (res 
 	res = make(record)
 	for field, val := range rcd {
 		if field[0] == '_' { // private field
-			continue
+			res[field] = rcd[field]
+		} else {
+			name := fmt.Sprintf("%s%d%s", field, id, path.Ext(val))
+			if _, err := utils.CopyFile(path.Join(r.dir, val), path.Join(newroot, dircd, name)); err != nil {
+				return res, err
+			}
+			res[field] = path.Join(dircd, name)
 		}
-		name := fmt.Sprintf("%s%d%s", field, id, path.Ext(val))
-		if _, err := utils.CopyFile(path.Join(r.dir, val), path.Join(newroot, dircd, name)); err != nil {
-			return res, err
-		}
-		res[field] = path.Join(dircd, name)
 	}
 	return res, nil
 }
@@ -159,22 +160,6 @@ func (r *ProbData) exportTable(tb table, newroot, dirtb string) (table, error) {
 		res.Record[i] = rcd
 	}
 	return res, nil
-
-	// pp.Print(tb)
-	// for i, record := range res.Record {
-	// 	for field, val := range record {
-	// 		if field[0] == '_' { // private field
-	// 			continue
-	// 		}
-	// 		name := fmt.Sprintf("%s%d%s", field, i, path.Ext(val))
-	// 		if _, err := utils.CopyFile(path.Join(r.dir, val), path.Join(newroot, dirtb, name)); err != nil {
-	// 			return tb, err
-	// 		}
-	// 		record[field] = path.Join(dirtb, name)
-	// 	}
-	// }
-	// pp.Print(res, tb)
-	// return res, nil
 }
 
 // Set workflow graph
