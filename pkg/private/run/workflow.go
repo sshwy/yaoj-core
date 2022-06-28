@@ -16,7 +16,8 @@ import (
 
 // perform a workflow in a directory.
 // inboundPath: map[datagroup_name]*map[field]filename
-func RunWorkflow(w wk.Workflow, dir string, inboundPath map[wk.Groupname]*map[string]string, fullscore float64) (*wk.Result, error) {
+func RunWorkflow(w wk.Workflow, dir string, inboundPath map[wk.Groupname]*map[string]string,
+	fullscore float64) (*wk.Result, error) {
 	nodes := runtimeNodes(w.Node)
 
 	if len(w.Inbound) != len(inboundPath) {
@@ -45,7 +46,7 @@ func RunWorkflow(w wk.Workflow, dir string, inboundPath map[wk.Groupname]*map[st
 		return nil, err
 	}
 	defer func() {
-		logger.Printf("Chdir %q", previousWd)
+		logger.Printf("Chdir back to %q", previousWd)
 		os.Chdir(previousWd)
 	}()
 
@@ -61,21 +62,29 @@ func RunWorkflow(w wk.Workflow, dir string, inboundPath map[wk.Groupname]*map[st
 			return fmt.Errorf("input not fullfilled")
 		}
 		node.calcHash()
-		// log.Print(node.outputHash())
-		// log.Printf("%d, %v", id, node.hash)
-		for i := 0; i < len(node.Output); i++ {
-			node.Output[i] = utils.RandomString(10)
+		cache_outputs := globalCache.Get(node.hash)
+
+		if cache_outputs != nil {
+			logger.Printf("Run node[%s] (cached)", id)
+			node.Output = cache_outputs
+			node.Result = nil
+		} else {
+			// log.Printf("%d, %v", id, node.hash)
+			for i := 0; i < len(node.Output); i++ {
+				node.Output[i] = utils.RandomString(10)
+			}
+			logger.Printf("Run node[%s] no cache", id)
+			// logger.Printf("input %+v", node.Input)
+			// logger.Printf("output %+v", node.Output)
+			result := node.Processor().Run(node.Input, node.Output)
+
+			node.Result = result
+			globalCache.Set(node.hash, node.Output)
 		}
+		nodes[id] = node
 		for _, edge := range w.EdgeFrom(id) {
 			nodes[edge.To.Name].Input[edge.To.LabelIndex] = nodes[edge.From.Name].Output[edge.From.LabelIndex]
 		}
-		logger.Printf("Run node[%s]:", id)
-		logger.Printf("input %+v", node.Input)
-		logger.Printf("output %+v", node.Output)
-		result := node.Processor().Run(node.Input, node.Output)
-		nd := nodes[id]
-		nd.Result = result
-		nodes[id] = nd
 		return nil
 	})
 	if err != nil {
@@ -140,7 +149,6 @@ func (r *rtNode) calcHash() {
 	hash := sha256.New()
 	for _, path := range r.Input {
 		hashval := fileHash(path)
-		log.Print(path, " ", hashval)
 		hash.Write(hashval[:])
 	}
 	var b = hash.Sum(nil)
@@ -150,23 +158,7 @@ func (r *rtNode) calcHash() {
 		panic(b)
 	}
 	r.hash = *(*sha)(b)
-}
-
-// generate hash for output files
-func (r *rtNode) outputHash() (res []sha) {
-	if r.hash == (sha{}) {
-		r.calcHash()
-	}
-	_, labels := r.Processor().Label()
-	res = make([]sha, len(r.Output))
-	hash := sha256.New()
-	for i, label := range labels {
-		hash.Reset()
-		hash.Write(r.hash[:])
-		hash.Write([]byte(label))
-		res[i] = *(*sha)(hash.Sum(nil))
-	}
-	return
+	// logger.Print(r.Node.ProcName, " ", r.hash)
 }
 
 func (r *rtNode) inputFullfilled() bool {
@@ -210,7 +202,7 @@ func topologicalEnum(w wk.Workflow, handler func(id string) error) error {
 		if !flag {
 			break
 		}
-		logger.Printf("topo current id=%s", p)
+		// logger.Printf("topo current id=%s", p)
 		indegree[p] = -1
 		for _, edge := range w.EdgeFrom(p) {
 			indegree[edge.To.Name]--
