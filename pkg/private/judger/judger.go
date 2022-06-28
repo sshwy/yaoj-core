@@ -2,7 +2,6 @@ package judger
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"sync"
 	"time"
@@ -10,8 +9,6 @@ import (
 	"github.com/sshwy/yaoj-core/pkg/processor"
 	"github.com/sshwy/yaoj-core/pkg/utils"
 )
-
-var logger = log.New(os.Stderr, "[judger] ", log.LstdFlags|log.Lshortfile|log.Lmsgprefix)
 
 type Option struct {
 	Logfile   string

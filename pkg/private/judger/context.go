@@ -60,7 +60,6 @@ func boolToInt(v bool) int {
 // log_level determine minimum log level (DEBUG, INFO, WARN, ERROR = 0, 1, 2, 3)
 // with_color whether use ASCII color controller character
 func logSet(filename string, level int, color bool) error {
-	logger.Printf("LogSet: file=%s level=%d color=%v", filename, level, color)
 	var cfilename *C.char = C.CString(filename)
 	defer C.free(unsafe.Pointer(cfilename))
 
