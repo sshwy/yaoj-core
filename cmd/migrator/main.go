@@ -68,7 +68,7 @@ func main() {
 
 func init() {
 	flag.StringVar(&srcDir, "src", "", "source directory")
-	flag.StringVar(&destDir, "output", "", "output directory")
+	flag.StringVar(&destDir, "output", ".", "output directory")
 	flag.StringVar(&dumpFile, "dump", "", "output a zip archive with given name")
 	flag.BoolVar(&isUoj, "uoj", false, "migrate from uoj problem data")
 }
