@@ -31,7 +31,7 @@ func testcaseOf(r *problem.ProbData, subtaskid string) []map[string]string {
 func RunProblem(r *problem.ProbData, dir string, submission map[string]string) (*problem.Result, error) {
 	logger.Printf("run dir=%s", dir)
 	// check submission
-	for k := range r.Submission.Field {
+	for k := range r.Submission {
 		if _, ok := submission[k]; !ok {
 			return nil, fmt.Errorf("submission missing field %s", k)
 		}

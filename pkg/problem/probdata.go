@@ -36,8 +36,8 @@ type ProbData struct {
 	Tests table
 	// "subtask" _subtaskid, _score
 	Subtasks table
-	// "submission"
-	Submission table
+	// "submission" configuration
+	Submission map[string]SubmLimit
 	// "static"
 	Static record
 	// "statement"
@@ -211,7 +211,7 @@ func NewProbData(dir string) (*ProbData, error) {
 		Tests:      newTable(),
 		Subtasks:   newTable(),
 		Static:     make(record),
-		Submission: newTable(),
+		Submission: map[string]SubmLimit{},
 		Statement:  make(record),
 	}
 	if err := prob.Export(dir); err != nil {

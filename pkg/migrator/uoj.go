@@ -188,6 +188,10 @@ func (r Uoj) Migrate(src string, dest string) (Problem, error) {
 
 	// analyzer
 	// panic("not complete")
+	prob.Submission["source"] = problem.SubmLimit{
+		Length:   1024 * 1024 * 50,
+		Accepted: []string{"txt"},
+	}
 
 	err = prob.Export(dest)
 	if err != nil {

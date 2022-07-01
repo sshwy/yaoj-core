@@ -23,7 +23,7 @@ type Problem interface {
 	// 附加文件
 	Assert(filename string) (*os.File, error)
 	// 获取提交格式的数据表格
-	SubmFields() []string
+	SubmConf() map[string]SubmLimit
 	Data() *ProbData
 }
 
@@ -60,12 +60,8 @@ func (r *prob) Assert(filename string) (*os.File, error) {
 }
 
 // 获取提交格式的数据表格
-func (r *prob) SubmFields() (res []string) {
-	res = []string{}
-	for field := range r.data.Submission.Field {
-		res = append(res, field)
-	}
-	return
+func (r *prob) SubmConf() map[string]SubmLimit {
+	return r.data.Submission
 }
 
 var _ Problem = (*prob)(nil)
@@ -227,4 +223,14 @@ func GuessLang(lang string) string {
 
 func (r *prob) Data() *ProbData {
 	return r.data
+}
+
+// limitation for any file submitted
+type SubmLimit struct {
+	// 接受的语言，nil 表示所有语言
+	Langs []string
+	// 接受哪些类型的文件，必须设置值
+	Accepted []string
+	// 文件大小，单位 byte
+	Length uint32
 }

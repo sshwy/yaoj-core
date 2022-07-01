@@ -72,7 +72,10 @@ func MakeProbData(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	probData.Submission.Fields().Add("source")
+	probData.Submission["source"] = problem.SubmLimit{
+		Length:   1024 * 1024 * 50,
+		Accepted: []string{"txt"},
+	}
 	// pp.Print(prob)
 
 	if err := probData.Export(probDataDir); err != nil {
@@ -93,7 +96,7 @@ func LoadProblem(t *testing.T) {
 		return
 	}
 	t.Log("statement: ", string(theProb.Stmt("zh")))
-	t.Log("submission", pp.Sprint(theProb.SubmFields()))
+	t.Log("submission", pp.Sprint(theProb.SubmConf()))
 }
 
 var problemDumpDir string
