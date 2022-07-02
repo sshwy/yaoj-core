@@ -80,3 +80,38 @@ func CopyFile(src, dst string) (int64, error) {
 	nBytes, err := io.Copy(destination, source)
 	return nBytes, err
 }
+
+func ReaderChecksum(reader io.Reader) Checksum {
+	hash := sha256.New()
+	if _, err := io.Copy(hash, reader); err != nil {
+		return Checksum{}
+	}
+	var b = hash.Sum(nil)
+	if len(b) != 32 {
+		panic(b)
+	}
+	return *(*Checksum)(b)
+}
+
+// SHA256 hash for file content.
+// for any error, return empty hash
+func FileChecksum(name string) Checksum {
+	f, err := os.Open(name)
+	if err != nil {
+		return Checksum{}
+	}
+	defer f.Close()
+
+	return ReaderChecksum(f)
+}
+
+// comparable
+type Checksum [32]byte
+
+func (r Checksum) String() string {
+	s := ""
+	for _, v := range r {
+		s += fmt.Sprintf("%02x", v)
+	}
+	return s
+}
