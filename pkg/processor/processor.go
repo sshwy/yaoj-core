@@ -23,7 +23,7 @@ const (
 	RuntimeError
 	MemoryExceed
 	TimeExceed
-	OoutputExceed
+	OutputExceed
 	SystemError
 	DangerousSyscall
 	ExitError
