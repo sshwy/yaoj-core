@@ -115,3 +115,26 @@ func (r Checksum) String() string {
 	}
 	return s
 }
+
+type LangTag int
+
+const (
+	Lcpp LangTag = iota
+	Lcpp11
+	Lcpp14
+	Lcpp17
+	Lcpp20
+	Lpython2
+	Lpython3
+	Lgo
+	Ljava
+	Lc
+)
+
+type CtntType int
+
+const (
+	Cplain CtntType = iota
+	Cbinary
+	Csource
+)

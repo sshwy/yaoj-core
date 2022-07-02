@@ -73,8 +73,7 @@ func MakeProbData(t *testing.T) {
 		return
 	}
 	probData.Submission["source"] = problem.SubmLimit{
-		Length:   1024 * 1024 * 50,
-		Accepted: []string{"txt"},
+		Length: 1024 * 1024 * 50,
 	}
 	// pp.Print(prob)
 
@@ -133,9 +132,20 @@ int main () {
 }
 	`).WriteFile(path.Join(dir, "src.cpp"))
 
-	res, err := run.RunProblem(theProb.Data(), t.TempDir(), map[string]string{
-		"source": path.Join(dir, "src.cpp"),
-	})
+	subm := problem.Submission{}
+	subm.Set("source", path.Join(dir, "src.cpp"))
+	if err := subm.DumpFile(path.Join(dir, "subm.zip")); err != nil {
+		t.Error(err)
+		return
+	}
+	subm2, err := problem.LoadSubm(path.Join(dir, "subm.zip"), dir)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	pp.Print(subm2)
+
+	res, err := run.RunProblem(theProb.Data(), t.TempDir(), subm2)
 	if err != nil {
 		t.Error(err)
 		return

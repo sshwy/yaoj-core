@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/sshwy/yaoj-core/pkg/problem"
+	"github.com/sshwy/yaoj-core/pkg/utils"
 	"github.com/sshwy/yaoj-core/pkg/workflow"
 )
 
@@ -189,8 +190,8 @@ func (r Uoj) Migrate(src string, dest string) (Problem, error) {
 	// analyzer
 	// panic("not complete")
 	prob.Submission["source"] = problem.SubmLimit{
-		Length:   1024 * 1024 * 50,
-		Accepted: []string{"txt"},
+		Length:   1024 * 64,
+		Accepted: []utils.CtntType{utils.Csource},
 	}
 
 	err = prob.Export(dest)

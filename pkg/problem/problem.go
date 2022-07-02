@@ -2,14 +2,13 @@ package problem
 
 import (
 	"archive/zip"
-	"fmt"
+	"encoding/json"
 	"io"
 	"log"
 	"os"
 	"path"
-	"path/filepath"
-	"strings"
 
+	"github.com/sshwy/yaoj-core/pkg/utils"
 	"golang.org/x/text/language"
 )
 
@@ -23,7 +22,7 @@ type Problem interface {
 	// 附加文件
 	Assert(filename string) (*os.File, error)
 	// 获取提交格式的数据表格
-	SubmConf() map[string]SubmLimit
+	SubmConf() SubmConf
 	Data() *ProbData
 }
 
@@ -60,7 +59,7 @@ func (r *prob) Assert(filename string) (*os.File, error) {
 }
 
 // 获取提交格式的数据表格
-func (r *prob) SubmConf() map[string]SubmLimit {
+func (r *prob) SubmConf() SubmConf {
 	return r.data.Submission
 }
 
@@ -94,124 +93,6 @@ var langMatcher = language.NewMatcher(SupportLangs)
 
 var logger = log.New(os.Stderr, "[problem] ", log.LstdFlags|log.Lshortfile|log.Lmsgprefix)
 
-func zipDir(root string, dest string) error {
-	root = path.Clean(root)
-	file, err := os.Create(dest)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	w := zip.NewWriter(file)
-	defer w.Close()
-
-	walker := func(pathname string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if info.IsDir() {
-			return nil
-		}
-		file, err := os.Open(pathname)
-		if err != nil {
-			return err
-		}
-		defer file.Close()
-
-		if pathname[:len(root)] != root {
-			return fmt.Errorf("invalid path %s", pathname)
-		}
-		zippath := pathname[len(root)+1:]
-
-		// Ensure that `pathname` is not absolute; it should not start with "/".
-		// This snippet happens to work because I don't use
-		// absolute pathnames, but ensure your real-world code
-		// transforms pathname into a zip-root relative pathname.
-		logger.Printf("Create %#v\n", zippath)
-		f, err := w.Create(zippath)
-		if err != nil {
-			return err
-		}
-
-		_, err = io.Copy(f, file)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	}
-	err = filepath.Walk(root, walker)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// https://gosamples.dev/unzip-file/
-func unzipSource(source, destination string) error {
-	// 1. Open the zip file
-	reader, err := zip.OpenReader(source)
-	if err != nil {
-		return err
-	}
-	defer reader.Close()
-
-	// 2. Get the absolute destination path
-	destination, err = filepath.Abs(destination)
-	if err != nil {
-		return err
-	}
-
-	// 3. Iterate over zip files inside the archive and unzip each of them
-	for _, f := range reader.File {
-		err := unzipFile(f, destination)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func unzipFile(f *zip.File, destination string) error {
-	// 4. Check if file paths are not vulnerable to Zip Slip
-	filePath := filepath.Join(destination, f.Name)
-	if !strings.HasPrefix(filePath, filepath.Clean(destination)+string(os.PathSeparator)) {
-		return fmt.Errorf("invalid file path: %s", filePath)
-	}
-
-	// 5. Create directory tree
-	if f.FileInfo().IsDir() {
-		if err := os.MkdirAll(filePath, os.ModePerm); err != nil {
-			return err
-		}
-		return nil
-	}
-
-	if err := os.MkdirAll(filepath.Dir(filePath), os.ModePerm); err != nil {
-		return err
-	}
-
-	// 6. Create a destination file for unzipped content
-	destinationFile, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
-	if err != nil {
-		return err
-	}
-	defer destinationFile.Close()
-
-	// 7. Unzip the content of a file and copy it to the destination file
-	zippedFile, err := f.Open()
-	if err != nil {
-		return err
-	}
-	defer zippedFile.Close()
-
-	if _, err := io.Copy(destinationFile, zippedFile); err != nil {
-		return err
-	}
-	return nil
-}
-
 func GuessLang(lang string) string {
 	tag, _, _ := langMatcher.Match(language.Make(lang))
 	if tag == language.Und {
@@ -228,9 +109,90 @@ func (r *prob) Data() *ProbData {
 // limitation for any file submitted
 type SubmLimit struct {
 	// 接受的语言，nil 表示所有语言
-	Langs []string
+	Langs []utils.LangTag
 	// 接受哪些类型的文件，必须设置值
-	Accepted []string
+	Accepted []utils.CtntType
 	// 文件大小，单位 byte
 	Length uint32
 }
+
+// 存储文件的路径
+type Submission map[string]string
+
+// 加入提交文件
+func (r Submission) Set(field string, name string) {
+	r[field] = name
+}
+
+// 打包
+func (r Submission) DumpFile(name string) error {
+	file, err := os.Create(name)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	w := zip.NewWriter(file)
+	defer w.Close()
+
+	var pathmap = map[string]string{}
+
+	for field, name := range r {
+		file, err := os.Open(name)
+		if err != nil {
+			return err
+		}
+
+		filename := field + "-" + path.Base(name)
+		f, err := w.Create(filename)
+		if err != nil {
+			return err
+		}
+
+		_, err = io.Copy(f, file)
+		if err != nil {
+			return err
+		}
+
+		file.Close()
+
+		pathmap[field] = filename
+	}
+
+	conf, err := w.Create("_config.json")
+	if err != nil {
+		return err
+	}
+
+	jsondata, err := json.Marshal(pathmap)
+	if err != nil {
+		return err
+	}
+
+	conf.Write(jsondata)
+	return nil
+}
+
+// 解压
+func LoadSubm(name string, dir string) (Submission, error) {
+	err := unzipSource(name, dir)
+	if err != nil {
+		return nil, err
+	}
+	bconf, err := os.ReadFile(path.Join(dir, "_config.json"))
+	if err != nil {
+		return nil, err
+	}
+	var pathmap map[string]string
+	if err := json.Unmarshal(bconf, &pathmap); err != nil {
+		return nil, err
+	}
+	var res = Submission{}
+	for field, name := range pathmap {
+		res[field] = path.Join(dir, name)
+	}
+	return res, nil
+}
+
+// 提交文件配置
+type SubmConf map[string]SubmLimit
