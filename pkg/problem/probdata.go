@@ -19,6 +19,14 @@ type Result struct {
 	Subtask   []SubtResult
 }
 
+func (r Result) Byte() []byte {
+	data, err := json.Marshal(r)
+	if err != nil {
+		panic(err)
+	}
+	return data
+}
+
 // Subtask result
 type SubtResult struct {
 	Subtaskid string
