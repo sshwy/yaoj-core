@@ -67,21 +67,25 @@ The go toolkit command.
 ### Installation
 
 1. Clone the repo
+
    ```sh
    git clone --recursive https://github.com/sshwy/yaoj-core
    ```
+
 2. Generate necessary files
+
    ```sh
    cd yaoj-core
-   go generate ./...
+   go generate
    ```
-3. Happy developing!
+3. Build Apps
 
-build migrator:
+  ```sh
+  go build ./cmd/migrator
+  go build ./cmd/judgeserver
+  ```
 
-```bash
-go build ./cmd/migrator
-```
+4. Happy developing!
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
