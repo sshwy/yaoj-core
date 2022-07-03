@@ -7,6 +7,7 @@ import (
 	"path"
 
 	"github.com/sshwy/yaoj-core/pkg/migrator"
+	"github.com/sshwy/yaoj-core/pkg/utils"
 )
 
 var isUoj bool
@@ -42,7 +43,8 @@ func Main() error {
 		if err != nil {
 			return err
 		}
-		err = prob.DumpFile(path.Join(destDir, dumpFile))
+		dest := path.Join(destDir, dumpFile)
+		err = prob.DumpFile(dest)
 		if err != nil {
 			return err
 		}
@@ -50,6 +52,8 @@ func Main() error {
 		if err != nil {
 			return err
 		}
+		chk := utils.FileChecksum(dest)
+		fmt.Printf("checksum: %s\n", chk.String())
 	}
 	fmt.Printf("done.")
 	return nil
