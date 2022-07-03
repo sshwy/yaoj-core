@@ -40,8 +40,8 @@ func (r Uoj) Migrate(src string, dest string) (Problem, error) {
 	}
 	prob.Fullscore = 100
 
-	// parse statement
-	err = filepath.Walk(path.Join(src, "statement"), func(pathname string, info fs.FileInfo, err error) error {
+	// parse statement (ignore error)
+	filepath.Walk(path.Join(src, "statement"), func(pathname string, info fs.FileInfo, err error) error {
 		if err != nil {
 			logger.Printf("prevent panic by handling failure accessing a path %q: %v", pathname, err)
 			return err
@@ -64,9 +64,6 @@ func (r Uoj) Migrate(src string, dest string) (Problem, error) {
 		prob.Statement[basename] = patch
 		return nil
 	})
-	if err != nil {
-		return nil, err
-	}
 	if _, ok := prob.Statement["statement.md"]; ok {
 		prob.SetStmt("zh", prob.Statement["statement.md"])
 	}
@@ -116,8 +113,12 @@ func (r Uoj) Migrate(src string, dest string) (Problem, error) {
 		}
 		file.Close()
 		prob.Static["checker"] = pchk
-	} else {
-		panic("gg")
+	} else { // custom checker
+		pchk, err := prob.AddFile("checker_custom.cpp", path.Join(src, "data", "chk.cpp"))
+		if err != nil {
+			return nil, err
+		}
+		prob.Static["checker"] = pchk
 	}
 
 	// parse limitation
@@ -194,6 +195,7 @@ func (r Uoj) Migrate(src string, dest string) (Problem, error) {
 		Accepted: []utils.CtntType{utils.Csource},
 	}
 
+	os.MkdirAll(dest, os.ModePerm)
 	err = prob.Export(dest)
 	if err != nil {
 		return nil, err
