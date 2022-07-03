@@ -256,3 +256,9 @@ func (r *ProbData) SetValFile(rcd record, field string, filename string) error {
 	rcd[field] = pin
 	return nil
 }
+
+// remove problem (dir)
+func (r *ProbData) Finalize() error {
+	logger.Printf("finalize %q", r.dir)
+	return os.RemoveAll(r.dir)
+}

@@ -40,6 +40,7 @@ func Judge(ctx *gin.Context) {
 		return
 	}
 	file.Close()
+	defer os.Remove(file.Name())
 
 	prob := storage.Get(qry.Checksum)
 	tmpdir, err := os.MkdirTemp("", "yaoj-runtime-******")
@@ -86,6 +87,7 @@ func Sync(ctx *gin.Context) {
 	file, _ := os.CreateTemp(os.TempDir(), "prob-*.zip")
 	io.Copy(file, ctx.Request.Body)
 	file.Close()
+	defer os.Remove(file.Name())
 
 	probdir, _ := os.MkdirTemp(os.TempDir(), "prob-*")
 	prob, err := problem.LoadDump(file.Name(), probdir)
@@ -102,7 +104,7 @@ func Sync(ctx *gin.Context) {
 		})
 		return
 	}
-	storage[qry.Checksum] = prob
+	storage.Set(qry.Checksum, prob)
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "ok",
 	})
