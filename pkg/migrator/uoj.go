@@ -80,7 +80,7 @@ func (r Uoj) Migrate(src string, dest string) (Problem, error) {
 
 	// parse tests
 	prob.Tests.Fields().Add("input")
-	prob.Tests.Fields().Add("answer")
+	prob.Tests.Fields().Add("output")
 	prob.Tests.Fields().Add("_score")
 
 	n_tests := parseInt(conf["n_tests"])
@@ -140,6 +140,9 @@ func (r Uoj) Migrate(src string, dest string) (Problem, error) {
 		return nil, err
 	}
 	prob.Static["limitation"] = plim
+	prob.Statement["_tl"] = fmt.Sprint(tl * 1000)
+	prob.Statement["_ml"] = conf["memory_limit"]
+	prob.Statement["_ol"] = conf["output_limit"]
 
 	var builder workflow.Builder
 	builder.SetNode("compile_source", "compiler:auto", false)
@@ -186,6 +189,8 @@ func (r Uoj) Migrate(src string, dest string) (Problem, error) {
 			}
 			las = int(endid)
 		}
+	} else {
+		prob.CalcMethod = problem.Msum
 	}
 
 	// analyzer

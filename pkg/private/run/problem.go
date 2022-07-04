@@ -57,6 +57,7 @@ func RunProblem(r *problem.ProbData, dir string, submission map[string]string) (
 			if err != nil {
 				return nil, err
 			}
+			sub_res.Fullscore = score
 			for _, test := range tests {
 				inboundPath[workflow.Gtests] = toPathMap(r, test)
 				res, err := RunWorkflow(r.Workflow(), dir, inboundPath, score/float64(len(tests)))
@@ -84,6 +85,7 @@ func RunProblem(r *problem.ProbData, dir string, submission map[string]string) (
 			}
 			sub_res.Testcase = append(sub_res.Testcase, *res)
 		}
+		sub_res.Fullscore = r.Fullscore
 		result.Subtask = append(result.Subtask, sub_res)
 	}
 	return &result, nil

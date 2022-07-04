@@ -13,10 +13,21 @@ import (
 	"github.com/sshwy/yaoj-core/pkg/workflow"
 )
 
+// 子任务中测试点得分的汇总方式
+type CalcMethod int
+
+const (
+	// default
+	Mmin CalcMethod = iota
+	Mmax
+	Msum
+)
+
 // Problem result
 type Result struct {
-	IsSubtask bool
-	Subtask   []SubtResult
+	IsSubtask  bool
+	CalcMethod CalcMethod
+	Subtask    []SubtResult
 }
 
 func (r Result) Byte() []byte {
@@ -30,6 +41,7 @@ func (r Result) Byte() []byte {
 // Subtask result
 type SubtResult struct {
 	Subtaskid string
+	Fullscore float64
 	Testcase  []workflow.Result
 }
 
@@ -37,21 +49,24 @@ type SubtResult struct {
 type ProbData struct {
 	// Usually 100.
 	// Full score can be used to determine the point of testcase
-	Fullscore float64
-	dir       string
-	workflow  workflow.Workflow
+	Fullscore  float64
+	CalcMethod CalcMethod
+	workflow   workflow.Workflow
 	// "tests" _subtaskid, _score ("average", {number})
 	Tests table
-	// "subtask" _subtaskid, _score
+	// "subtask" _subtaskid, _score, _method
 	Subtasks table
 	// "submission" configuration
 	Submission map[string]SubmLimit
 	// "static"
 	Static record
 	// "statement"
-	// Statement has 1 record. "s.{lang}", "t.{lang}" represents statement and tutorial respectively.
+	// Statement has 1 record. "s.{lang}", "t.{lang}" represents statement and
+	// tutorial respectively. "_tl" "_ml" "_ol" denotes cpu time limit (ms),
+	// real memory limit (MB) and output limit (MB) respectively.
 	// Others are just filename.
 	Statement record
+	dir       string
 }
 
 // Add file to r.dir/patch and return relative path
@@ -139,6 +154,14 @@ func copyTable(tb table) (res table) {
 	return
 }
 
+func copyRecord(rcd record) (res record) {
+	res = record{}
+	for field, val := range rcd {
+		res[field] = val
+	}
+	return
+}
+
 func (r *ProbData) exportRecord(id int, rcd record, newroot, dircd string) (res record, err error) {
 	log.Printf("Export Record #%d %#v", id, dircd)
 	res = make(record)
@@ -161,6 +184,11 @@ func (r *ProbData) exportTable(tb table, newroot, dirtb string) (table, error) {
 	res := copyTable(tb)
 
 	for i, record := range tb.Record {
+		for field := range record {
+			if _, ok := tb.Field[field]; !ok {
+				return tb, fmt.Errorf("invalid field %s in record #%d", field, i)
+			}
+		}
 		rcd, err := r.exportRecord(i, record, newroot, dirtb)
 		if err != nil {
 			return tb, err

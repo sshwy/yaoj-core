@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"strconv"
 
 	"github.com/sshwy/yaoj-core/pkg/utils"
 	"golang.org/x/text/language"
@@ -23,7 +24,31 @@ type Problem interface {
 	Assert(filename string) (*os.File, error)
 	// 获取提交格式的数据表格
 	SubmConf() SubmConf
+	// 评测用的
 	Data() *ProbData
+	// 展示数据
+	DataInfo() DataInfo
+}
+
+type DataInfo struct {
+	IsSubtask  bool
+	Fullscore  float64
+	CalcMethod CalcMethod //计分方式
+	Subtasks   []SubtaskInfo
+	// 静态文件
+	Static map[string]string //other properties of data
+}
+
+type SubtaskInfo struct {
+	Id        int
+	Fullscore float64
+	Field     map[string]string //other properties of subtasks
+	Tests     []TestInfo
+}
+
+type TestInfo struct {
+	Id    int
+	Field map[string]string //other properties of tests, i.e. in/output file path
 }
 
 type prob struct {
@@ -61,6 +86,52 @@ func (r *prob) Assert(filename string) (*os.File, error) {
 // 获取提交格式的数据表格
 func (r *prob) SubmConf() SubmConf {
 	return r.data.Submission
+}
+
+func (r *prob) DataInfo() DataInfo {
+	var res = DataInfo{
+		IsSubtask:  r.data.IsSubtask(),
+		Fullscore:  r.data.Fullscore,
+		CalcMethod: r.data.CalcMethod,
+		Static:     r.data.Static,
+		Subtasks:   []SubtaskInfo{},
+	}
+	if res.IsSubtask {
+		for i, task := range r.data.Subtasks.Record {
+			var tests = []TestInfo{}
+			for j, test := range r.data.Tests.Record {
+				if test["_subtaskid"] != task["_subtaskid"] {
+					continue
+				}
+				tests = append(tests, TestInfo{
+					Id:    j,
+					Field: copyRecord(test),
+				})
+			}
+
+			score, _ := strconv.ParseFloat(task["_score"], 64)
+			res.Subtasks = append(res.Subtasks, SubtaskInfo{
+				Id:        i,
+				Fullscore: score,
+				Field:     task,
+				Tests:     tests,
+			})
+		}
+	} else {
+		var tests = []TestInfo{}
+		for j, test := range r.data.Tests.Record {
+			tests = append(tests, TestInfo{
+				Id:    j,
+				Field: copyRecord(test),
+			})
+		}
+
+		res.Subtasks = append(res.Subtasks, SubtaskInfo{
+			Fullscore: r.data.Fullscore,
+			Tests:     tests,
+		})
+	}
+	return res
 }
 
 var _ Problem = (*prob)(nil)
