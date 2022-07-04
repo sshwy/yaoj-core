@@ -95,7 +95,7 @@ func RunWorkflow(w wk.Workflow, dir string, inboundPath map[wk.Groupname]*map[st
 	for name, node := range nodes {
 		runtimeNodes[name] = node.RuntimeNode
 	}
-	res := w.Analyze(runtimeNodes, fullscore)
+	res := w.Analyze(w, runtimeNodes, fullscore)
 
 	// bs, _ := script.Exec("ls .").Bytes()
 	// logger.Print(string(bs))
@@ -178,6 +178,7 @@ func runtimeNodes(node map[string]wk.Node) (res map[string]rtNode) {
 				Node:   v,
 				Input:  make([]string, len(processor.InputLabel(v.ProcName))),
 				Output: make([]string, len(processor.OutputLabel(v.ProcName))),
+				Attr:   map[string]string{},
 			},
 		}
 	}

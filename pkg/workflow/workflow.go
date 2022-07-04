@@ -123,13 +123,23 @@ type ResultFileDisplay struct {
 	Content string
 }
 
+func isExecAny(mode os.FileMode) bool {
+	return mode&0111 != 0
+}
+
 func fetchFileContent(path string, len int) []byte {
 	file, err := os.Open(path)
 	if err != nil {
 		return []byte("[error] " + err.Error())
 	}
 	defer file.Close()
+
+	stat, _ := file.Stat()
+	if isExecAny(stat.Mode()) {
+		return []byte("executable file")
+	}
 	b := make([]byte, len)
+
 	file.Read(b)
 	return b
 }
@@ -159,4 +169,6 @@ type RuntimeNode struct {
 	Output []string
 	// result of processor
 	Result *processor.Result
+	// whether its output is determined by problem-wide things only
+	Attr map[string]string
 }

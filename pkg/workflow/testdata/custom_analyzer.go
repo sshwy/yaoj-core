@@ -8,7 +8,7 @@ import (
 type analyzerPlugin struct {
 }
 
-func (r analyzerPlugin) Analyze(nodes map[string]workflow.RuntimeNode, fullscore float64) workflow.Result {
+func (r analyzerPlugin) Analyze(w workflow.Workflow, nodes map[string]workflow.RuntimeNode, fullscore float64) workflow.Result {
 	for _, node := range nodes {
 		if node.Result.Code != processor.Ok {
 			return workflow.Result{

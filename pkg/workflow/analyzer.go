@@ -2,6 +2,7 @@ package workflow
 
 import (
 	"fmt"
+	"log"
 	goPlugin "plugin"
 
 	"github.com/sshwy/yaoj-core/pkg/processor"
@@ -10,7 +11,7 @@ import (
 
 // Analyzer generates result of a workflow.
 type Analyzer interface {
-	Analyze(nodes map[string]RuntimeNode, fullscore float64) Result
+	Analyze(w Workflow, nodes map[string]RuntimeNode, fullscore float64) Result
 }
 
 func LoadAnalyzer(plugin string) (Analyzer, error) {
@@ -34,40 +35,90 @@ func LoadAnalyzer(plugin string) (Analyzer, error) {
 type DefaultAnalyzer struct {
 }
 
-func (r DefaultAnalyzer) Analyze(nodes map[string]RuntimeNode, fullscore float64) Result {
+func (r DefaultAnalyzer) Analyze(w Workflow, nodes map[string]RuntimeNode, fullscore float64) Result {
+	for _, bounds := range *w.Inbound[Gsubm] {
+		for _, bound := range bounds {
+			nodes[bound.Name].Attr["dependon"] = "user"
+		}
+	}
+	for {
+		flag := false
+		for _, edge := range w.Edge {
+			if nodes[edge.From.Name].Attr["dependon"] == "user" &&
+				nodes[edge.To.Name].Attr["dependon"] != "user" {
+
+				nodes[edge.To.Name].Attr["dependon"] = "user"
+				flag = true
+			}
+		}
+		if !flag {
+			break
+		}
+	}
 	res := Result{
 		ResultMeta: ResultMeta{
 			Score:     fullscore,
 			Fullscore: fullscore,
 			Title:     "Accepted",
 		},
+		File: []ResultFileDisplay{},
 	}
 
-	for i, node := range nodes {
+	for name, node := range nodes {
 		if node.Result == nil {
 			continue
 		}
+		log.Printf("node[%s]: %d", name, node.Result.Code)
+		labels := processor.OutputLabel(node.ProcName)
+		list := []ResultFileDisplay{}
+		for i, label := range labels {
+			list = append(list, FileDisplay(node.Output[i], label, 5000))
+		}
+		list = append(list, ResultFileDisplay{
+			Title:   "message",
+			Content: node.Result.Msg,
+		})
 		if node.Result.Code != processor.Ok {
-			return Result{
-				ResultMeta: ResultMeta{
-					Score:     0,
-					Fullscore: fullscore,
-					Title:     "Not Accepted",
-				},
-				File: []ResultFileDisplay{
-					{
-						Title: "Error Node",
-						Content: fmt.Sprintf("name=%s, proc=%s, Code=%v Msg=%s",
-							i, node.ProcName, node.Result.Code,
-							node.Result.Msg,
-						),
+			if node.Attr["dependon"] == "user" {
+				var title = "Unaccepted"
+				switch node.Result.Code {
+				case processor.TimeExceed:
+					title = "Time Limit Exceed"
+				case processor.RuntimeError:
+					title = "Runtime Error"
+				case processor.DangerousSyscall:
+					title = "Dangerous System Call"
+				case processor.ExitError:
+					title = "Exit Code Error"
+				case processor.OutputExceed:
+					title = "Output Limit Exceed"
+				case processor.MemoryExceed:
+					title = "Memory Limit Exceed"
+				}
+
+				return Result{
+					ResultMeta: ResultMeta{
+						Score:     0,
+						Fullscore: fullscore,
+						Title:     title,
 					},
-				},
+					File: list,
+				}
+			} else { // system error
+				return Result{
+					ResultMeta: ResultMeta{
+						Score:     0,
+						Fullscore: fullscore,
+						Title:     "System Error",
+					},
+					File: list,
+				}
 			}
 		}
 		if node.Key {
 			res.ResultMeta.Memory += utils.ByteValue(*node.Result.Memory)
 			res.ResultMeta.Time += *node.Result.CpuTime
+			res.File = append(res.File, list...)
 		}
 	}
 	return res
