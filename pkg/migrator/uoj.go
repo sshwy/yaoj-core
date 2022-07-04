@@ -183,6 +183,15 @@ func (r Uoj) Migrate(src string, dest string) (Problem, error) {
 			record := prob.Subtasks.Records().New()
 			record["_subtaskid"] = fmt.Sprint("subtask_", i)
 			record["_score"] = fmt.Sprint(score)
+			if depstr, ok := conf[fmt.Sprint("subtask_dependence_", i)]; ok {
+				prob.Subtasks.Fields().Add("_depend")
+
+				deps := strings.Split(depstr, " ")
+				deps = utils.Map(deps, func(token string) string {
+					return "subtask_" + token
+				})
+				record["_depend"] = strings.Join(deps, ",")
+			}
 
 			for j := las; j < int(endid); j++ {
 				prob.Tests.Record[j]["_subtaskid"] = record["_subtaskid"]
@@ -213,25 +222,26 @@ func parseConf(content []byte) (res map[string]string) {
 	res = map[string]string{}
 	lines := strings.Split(string(content), "\n")
 	for _, line := range lines {
-		line = strings.Trim(line, " \t\f\n\r")
+		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
 		}
 		tokens := strings.Split(line, " ")
-		var directive, val string
+
+		finaltokens := []string{}
 		for _, token := range tokens {
-			if token == "" {
-				continue
-			}
-			if directive == "" {
-				directive = token
-			} else {
-				val = token
-				break
+			token = strings.TrimSpace(token)
+			if token != "" {
+				finaltokens = append(finaltokens, token)
 			}
 		}
-		if directive == "" {
-			panic(fmt.Sprintf("invalid line %#v", line))
+		tokens = finaltokens
+
+		var directive, val string
+		if len(tokens) == 1 {
+			directive = tokens[0]
+		} else {
+			directive, val = tokens[0], strings.Join(tokens[1:], " ")
 		}
 		res[directive] = val
 	}

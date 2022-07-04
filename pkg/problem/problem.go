@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"strings"
 
 	"github.com/sshwy/yaoj-core/pkg/utils"
 	"golang.org/x/text/language"
@@ -42,6 +43,7 @@ type DataInfo struct {
 type SubtaskInfo struct {
 	Id        int
 	Fullscore float64
+	Depend    []int
 	Field     map[string]string //other properties of subtasks
 	Tests     []TestInfo
 }
@@ -109,12 +111,25 @@ func (r *prob) DataInfo() DataInfo {
 				})
 			}
 
+			depend := []int{}
+			if task["_depend"] != "" {
+				deps := strings.Split(task["_depend"], ",")
+				for _, dep := range deps {
+					dep = strings.TrimSpace(dep)
+					for id, subt := range r.data.Subtasks.Record {
+						if subt["_subtaskid"] == dep {
+							depend = append(depend, id)
+						}
+					}
+				}
+			}
 			score, _ := strconv.ParseFloat(task["_score"], 64)
 			res.Subtasks = append(res.Subtasks, SubtaskInfo{
 				Id:        i,
 				Fullscore: score,
 				Field:     task,
 				Tests:     tests,
+				Depend:    depend,
 			})
 		}
 	} else {

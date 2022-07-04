@@ -54,7 +54,7 @@ type ProbData struct {
 	workflow   workflow.Workflow
 	// "tests" _subtaskid, _score ("average", {number})
 	Tests table
-	// "subtask" _subtaskid, _score, _method
+	// "subtask" _subtaskid, _score, _depend (separated by ",")
 	Subtasks table
 	// "submission" configuration
 	Submission map[string]SubmLimit
