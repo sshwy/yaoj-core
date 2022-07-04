@@ -1,12 +1,16 @@
 package workflow
 
 import (
+	"encoding/xml"
 	"fmt"
-	"log"
+	"io"
+	"os"
 	goPlugin "plugin"
 
+	"github.com/k0kubun/pp/v3"
 	"github.com/sshwy/yaoj-core/pkg/processor"
 	"github.com/sshwy/yaoj-core/pkg/utils"
+	"golang.org/x/text/encoding/charmap"
 )
 
 // Analyzer generates result of a workflow.
@@ -68,7 +72,6 @@ func (r DefaultAnalyzer) Analyze(w Workflow, nodes map[string]RuntimeNode, fulls
 		if node.Result == nil {
 			continue
 		}
-		log.Printf("node[%s]: %d", name, node.Result.Code)
 		labels := processor.OutputLabel(node.ProcName)
 		list := []ResultFileDisplay{}
 		for i, label := range labels {
@@ -76,9 +79,61 @@ func (r DefaultAnalyzer) Analyze(w Workflow, nodes map[string]RuntimeNode, fulls
 		}
 		list = append(list, ResultFileDisplay{
 			Title:   "message",
-			Content: node.Result.Msg,
+			Content: name + ": " + node.Result.Msg,
 		})
+
+		if node.Key {
+			res.ResultMeta.Memory += utils.ByteValue(*node.Result.Memory)
+			res.ResultMeta.Time += *node.Result.CpuTime
+			res.File = append(res.File, list...)
+		}
+	}
+
+	for name, node := range nodes {
+		if node.Result == nil {
+			continue
+		}
 		if node.Result.Code != processor.Ok {
+			labels := processor.OutputLabel(node.ProcName)
+			list := []ResultFileDisplay{}
+			if !node.Key { // 如果是关键结点那么文件啥的已经被展示了
+				for i, label := range labels {
+					list = append(list, FileDisplay(node.Output[i], label, 5000))
+				}
+				list = append(list, ResultFileDisplay{
+					Title:   "message",
+					Content: name + ": " + node.Result.Msg,
+				})
+			}
+
+			if node.ProcName == "checker:testlib" {
+				type Result struct {
+					XMLName xml.Name `xml:"result"`
+					Outcome string   `xml:"outcome,attr"`
+				}
+				var result Result
+				file, _ := os.Open(node.Output[0])
+				// parse xml encoded windows1251
+				d := xml.NewDecoder(file)
+				d.CharsetReader = func(charset string, input io.Reader) (io.Reader, error) {
+					switch charset {
+					case "windows-1251":
+						return charmap.Windows1251.NewDecoder().Reader(input), nil
+					default:
+						return nil, fmt.Errorf("unknown charset: %s", charset)
+					}
+				}
+				d.Decode(&result)
+
+				res.File = append(res.File, list...)
+				res.File = append(res.File, FileDisplay(node.Input[3], "answer", 5000))
+				if result.Outcome != "accepted" {
+					res.Title = "Wrong Answer"
+					res.Score = 0
+					pp.Print(result)
+				}
+				return res
+			}
 			if node.Attr["dependon"] == "user" {
 				var title = "Unaccepted"
 				switch node.Result.Code {
@@ -96,29 +151,16 @@ func (r DefaultAnalyzer) Analyze(w Workflow, nodes map[string]RuntimeNode, fulls
 					title = "Memory Limit Exceed"
 				}
 
-				return Result{
-					ResultMeta: ResultMeta{
-						Score:     0,
-						Fullscore: fullscore,
-						Title:     title,
-					},
-					File: list,
-				}
-			} else { // system error
-				return Result{
-					ResultMeta: ResultMeta{
-						Score:     0,
-						Fullscore: fullscore,
-						Title:     "System Error",
-					},
-					File: list,
-				}
+				res.Title = title
+				res.Score = 0
+				res.File = append(res.File, list...)
+				return res
 			}
-		}
-		if node.Key {
-			res.ResultMeta.Memory += utils.ByteValue(*node.Result.Memory)
-			res.ResultMeta.Time += *node.Result.CpuTime
+			// system error
+			res.Title = "System Error"
+			res.Score = 0
 			res.File = append(res.File, list...)
+			return res
 		}
 	}
 	return res
