@@ -144,7 +144,8 @@ func fetchFileContent(path string, len int) []byte {
 	return b
 }
 
-// Display content of a text file with max-length limitation
+// Try to display content of a text file with max-length limitation.
+// It is well-processed if an executable file is provided.
 func FileDisplay(path string, title string, len int) ResultFileDisplay {
 	content := strings.TrimRight(string(fetchFileContent(path, len)), "\x00 \n\t\r")
 	return ResultFileDisplay{
@@ -153,6 +154,7 @@ func FileDisplay(path string, title string, len int) ResultFileDisplay {
 	}
 }
 
+// Create an empty WorkflowGraph
 func NewGraph() WorkflowGraph {
 	return WorkflowGraph{
 		Node:    map[string]Node{},
