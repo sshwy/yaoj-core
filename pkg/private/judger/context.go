@@ -236,3 +236,9 @@ func (r context) SetLimit(options L) error {
 	}
 	return nil
 }
+
+func init() {
+	if code := C.log_init(); code != 0 {
+		panic(fmt.Sprint("init log failed: ", code))
+	}
+}
