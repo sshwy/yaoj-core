@@ -80,18 +80,15 @@ The go toolkit command.
    ```
 3. Build Apps
 
-  ```sh
-  go build ./cmd/migrator
-  go build ./cmd/judgeserver
-  ```
+   ```sh
+   go build ./cmd/migrator
+   go build ./cmd/judgeserver
+   ```
 
 4. Happy developing!
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
-
-
-<!-- USAGE EXAMPLES -->
 ## Usage
 
 <a href="https://pkg.go.dev/github.com/sshwy/yaoj-core@master"><img src="https://pkg.go.dev/badge/github.com/sshwy/yaoj-core.svg" alt="Go Reference"></a>
