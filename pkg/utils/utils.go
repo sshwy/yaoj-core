@@ -6,6 +6,7 @@ import (
 	"io"
 	"math/rand"
 	"os"
+	"time"
 )
 
 type HashValue []byte
@@ -138,3 +139,7 @@ const (
 	Cbinary
 	Csource
 )
+
+func init() {
+	rand.Seed(time.Now().Unix())
+}
