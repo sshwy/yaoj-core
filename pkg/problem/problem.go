@@ -111,7 +111,7 @@ type SubmLimit struct {
 	// 接受的语言，nil 表示所有语言
 	Langs []utils.LangTag
 	// 接受哪些类型的文件，必须设置值
-	Accepted []utils.CtntType
+	Accepted utils.CtntType
 	// 文件大小，单位 byte
 	Length uint32
 }

@@ -192,7 +192,7 @@ func (r Uoj) Migrate(src string, dest string) (Problem, error) {
 	// panic("not complete")
 	prob.Submission["source"] = problem.SubmLimit{
 		Length:   1024 * 64,
-		Accepted: []utils.CtntType{utils.Csource},
+		Accepted: utils.Csource,
 	}
 
 	os.MkdirAll(dest, os.ModePerm)
