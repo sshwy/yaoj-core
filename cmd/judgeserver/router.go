@@ -64,6 +64,7 @@ func Judge(ctx *gin.Context) {
 			logger.Printf("run problem: %v", err)
 			return
 		}
+		logger.Print(result.Brief())
 
 		_, err = http.Post(qry.Callback, "text/json; charset=utf-8", bytes.NewReader(result.Byte()))
 		if err != nil {

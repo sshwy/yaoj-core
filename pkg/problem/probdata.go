@@ -1,6 +1,7 @@
 package problem
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -8,6 +9,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"text/template"
 
 	"github.com/sshwy/yaoj-core/pkg/utils"
 	"github.com/sshwy/yaoj-core/pkg/workflow"
@@ -36,6 +38,24 @@ func (r Result) Byte() []byte {
 		panic(err)
 	}
 	return data
+}
+
+var briefTpl = template.Must(template.New("brief").Parse(`
+subtask: {{ .IsSubtask }}
+{{if .IsSubtask}}{{range .Subtask}}{{ .Subtaskid }} ({{ .Fullscore }}pts)
+{{range .Testcase}}{{ .Title }} {{ .Score }}pts {{ .Time }} {{ .Memory }}
+{{end}}{{end}}
+{{else}}{{range .Subtask}}{{range .Testcase}}{{ .Title }} {{ .Score }}pts {{ .Time }} {{ .Memory }}
+{{end}}{{end}}
+{{end}}
+`))
+
+func (r Result) Brief() string {
+	var b bytes.Buffer
+	if err := briefTpl.Execute(&b, r); err != nil {
+		panic(err)
+	}
+	return b.String()
 }
 
 // Subtask result
