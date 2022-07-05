@@ -2,6 +2,10 @@ module github.com/sshwy/yaoj-core
 
 go 1.18
 
+retract (
+  [v0.0.0, v0.0.17] // Has migrated.
+)
+
 require (
 	github.com/bitfield/script v0.20.2
 	github.com/gin-gonic/gin v1.8.1
